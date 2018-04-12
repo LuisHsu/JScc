@@ -16,18 +16,18 @@ const fs = require("fs");
 
 var tmpbuf = Buffer.alloc(0);
 
+const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
-fs.readFile(process.argv[2], (err, data) => {
-	if(err){
-		console.error(err);
-		return;
-	}
+fin.on('data', (data) => {
 	var dataBuf = Buffer.concat([tmpbuf, data], tmpbuf.length + data.length);
-	runPP(dataBuf.toString());
+	runPP(dataBuf);
 	tmpbuf = dataBuf;
 });
 
-function runPP(data){
+function runPP(dataBuf){
+	var data = dataBuf.toString();
+	// Replace digraph
+	data = data.replace("<:", "[").replace(":>", "]").replace("<%", "{").replace("%>", "}").replace("%:", "#");
 	fout.write(data);
 }
