@@ -1,0 +1,28 @@
+{
+    "env": {
+        "browser": false,
+        "commonjs": true,
+        "es6": true,
+        "node": true
+    },
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": false
+        },
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-dupe-keys":"error",
+        "no-extra-parens":"error",
+        "no-extra-semi":"error",
+        "no-unreachable":"error",
+        "valid-jsdoc":"warn",
+        "use-isnan":"error",
+        "curly":"error",
+        "default-case":"error",
+        "no-invalid-this":"error",
+        "no-trailing-spaces":"error",
+        "comma-dangle":"error",
+        "semi":"error"
+    }
+}

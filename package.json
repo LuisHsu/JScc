@@ -4,10 +4,13 @@
   "description": "C Compiler for WasmVM in JavaScript",
   "main": "pp.js",
   "devDependencies": {
+    "colors": "^1.2.1",
+    "diff": "^3.5.0",
+    "eslint": "*",
     "jasmine": "^3.1.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine"
   },
   "repository": {
     "type": "git",
