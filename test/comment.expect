@@ -4,6 +4,8 @@ int main(void){
 	
 
 
+	"//sd";
+	"/*dad*/";
 	int a ;
 	return 0;
 }

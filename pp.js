@@ -38,14 +38,9 @@ function runPP(data, lastChunk){
 	// Replace digraph
 	data = digraph(data);
 	// Replace single line comment
-	//data = data.replace(/\/\/.*\n/, "\n");
+	data = singleLineComment(data);
 	// Replace multi line comment
-	//var matches = data.match(/\/\*[^\*]*\*\//g);
-	//if(matches){
-	//	matches.forEach((line) => {
-	///		data = data.replace(line, line.replace(/[^\n]*/g, ""));
-	//	});
-	//}
+	data = multiLineComment(data);
 	// Process line by line
 	var lineChunk = data.split('\n');
 	var logicalLine = "";
@@ -247,6 +242,44 @@ function digraph(data){
 			replaced = "#";
 		}
 		data += processing.substr(preLastIndex, regex.lastIndex - 2 - preLastIndex) + replaced;
+		preLastIndex = regex.lastIndex;
+	}
+	data += processing.substr(preLastIndex);
+	return data;
+}
+
+function singleLineComment(data){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\/\/[^\n]*\n)/g;
+	var preLastIndex = 0;
+	var processing = data.substr();
+	data = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"")){
+			data += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		data += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + "\n";
+		preLastIndex = regex.lastIndex;
+	}
+	data += processing.substr(preLastIndex);
+	return data;
+}
+
+function multiLineComment(data){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\/\*([^\*]|\*[^\/])*\*\/)/g;
+	var preLastIndex = 0;
+	var processing = data.substr();
+	data = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"")){
+			data += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		data += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + matched[0].replace(/[^\n]/g,"");
 		preLastIndex = regex.lastIndex;
 	}
 	data += processing.substr(preLastIndex);
