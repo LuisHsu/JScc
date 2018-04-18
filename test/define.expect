@@ -1,9 +1,7 @@
 
 
+
 int main(void){
-
-
-
-int a ;
-return 0;
+	int a[3];
+	return 0;
 }
