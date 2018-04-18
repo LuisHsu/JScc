@@ -20,7 +20,6 @@
         "use-isnan":"error",
         "curly":"error",
         "default-case":"error",
-        "no-invalid-this":"error",
         "no-trailing-spaces":"error",
         "comma-dangle":"error",
         "semi":"error"

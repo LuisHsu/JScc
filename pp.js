@@ -13,8 +13,9 @@
 //    limitations under the License.
 
 const fs = require("fs");
+const log = require("./errors")(process.argv[2]);
 
-var tmpbuf = Buffer.alloc(0);
+var remainBuf = Buffer.alloc(0);
 
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
@@ -22,21 +23,18 @@ const fout = fs.createWriteStream(process.argv[3]);
 var macroMap = {};
 
 fin.on('data', (data) => {
-	var dataBuf = Buffer.concat([tmpbuf, data], tmpbuf.length + data.length);
-	runPP(dataBuf);
-	tmpbuf = dataBuf;
+	var dataBuf = Buffer.concat([remainBuf, data], remainBuf.length + data.length);
+	var remain = runPP(dataBuf.toString());
+	remainBuf = dataBuf.slice(dataBuf.length - remain.length);
 });
 
-fin.on('end', ()=>{
-	if(tmpbuf.length > 0){
-		runPP(tmpbuf);
+fin.on('end', () => {
+	if(remainBuf.length > 0){
+		runPP(remainBuf.toString() + "\n");
 	}
-	fin.close();
-	fout.close();
 });
 
-function runPP(dataBuf){
-	var data = dataBuf.toString();
+function runPP(data){
 	// Replace digraph
 	data = data.replace("<:", "[").replace(":>", "]").replace("<%", "{").replace("%>", "}").replace("%:", "#");
 	// Replace single line comment
@@ -50,20 +48,26 @@ function runPP(dataBuf){
 	}
 	// Process line by line
 	while(data.indexOf("\n") != -1){
+		log.addLine();
 		var regex = /\s*#(\\\n|[^\n])*/;
 		var line = "";
 		if(data.search(regex) == 0){
-			line = data.match(regex)[0].replace("\\\n", "");
-			if(!runDefine(line)){
+			line = data.match(regex)[0];
+			data = data.substr(line.length);
+			line = line.replace("\\\n", "");
+			if(runDefine(line)){
 
 			}else{
 
 			}
+			fout.write("\n");
 		}else{
 			line = data.substr(0, data.indexOf("\n") + 1);
+			fout.write(line);
+			data = data.substr(line.length);
 		}
-		data = data.substr(line.length);
 	}
+	return data;
 }
 
 function runDefine(line){
@@ -73,6 +77,34 @@ function runDefine(line){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
-	regex = /[_A-Za-z0-9]*/;
+	var macroName = line.match(/[_A-Za-z0-9]*/)[0];
+	if(!macroName){
+		log.error(`[PP]: Expected macro name in #define directive`);
+		return false;
+	}
+	line = line.substr(macroName.length);
+	var macro = {
+		str: "",
+		args: [],
+		va: false
+	};
+	if(line.charAt(0) == '('){
+		var paramLine = line.match(/\([^\)]*\)/);
+		if(!paramLine){
+			log.error(`[PP]: Unmatched ')' in #define directive`);
+			return false;
+		}
+		line = line.substr(paramLine[0].length);
+		var params = paramLine[0].substr(1, paramLine[0].length - 2).split(',');
+		params.forEach((param) => {
+			if(param.trim() == "..."){
+				macro.va = true;
+			}else{
+				macro.args.push(param.trim());
+			}
+		});
+	}
+	macro.str = line.substr(1);
+	macroMap[macroName] = macro;
 	return true;
 }
