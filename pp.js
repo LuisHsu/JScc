@@ -63,8 +63,8 @@ function runPP(data){
 			fout.write("\n");
 		}else{
 			line = data.substr(0, data.indexOf("\n") + 1);
-			fout.write(line);
 			data = data.substr(line.length);
+			fout.write(evalMacro(line, macroMap));
 		}
 	}
 	return data;
@@ -100,6 +100,12 @@ function runDefine(line){
 			if(param.trim() == "..."){
 				macro.va = true;
 			}else{
+				var dup = false;
+				macro.args.map(arg => dup = dup | arg == param.trim());
+				if(dup){
+					log.error(`[PP]: Identifier '${param.trim()}' dublicated in #define directive`);
+					return false;
+				}
 				macro.args.push(param.trim());
 			}
 		});
@@ -107,4 +113,66 @@ function runDefine(line){
 	macro.str = line.substr(1);
 	macroMap[macroName] = macro;
 	return true;
+}
+
+function evalMacro(line, macromap){
+	var modified = false;
+	do{
+		var regex = /[A-Za-z_]\w*(\s*\(.*\))?/g;
+		var processing = line.substr();
+		line = "";
+		var preLastIndex = 0;
+		modified = false;
+		for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+			var macroName = matched[0].match(/[A-Za-z_]\w*/)[0];
+			var paramStr = matched[0].match(/\s*\(.*\)$/);
+			paramStr = paramStr ? evalMacro(paramStr[0], macromap) : "";
+			if(macromap[macroName]){
+				var macro = macromap[macroName];
+				if(macro.va || macro.args.length > 0){
+					// Split args
+					var argArray = paramStr.trim().substr(1, paramStr.trim().length - 2).match(/(\"(\\\"|[^\"])*\"|[^,]*)*(,|\s*$)/g)
+						.map(arg => arg.charAt(arg.length - 1) == ',' ? arg.substr(0, arg.length - 1) : arg);
+					argArray.pop();
+					// Generate new macromap
+					var newMap = {
+						__VA_ARGS__:{
+							str: "",
+							args: [],
+							va: false
+						}
+					};
+					argArray.forEach((arg, index) => {
+						if(index < macro.args.length){
+							newMap[macro.args[index]] = {
+								str: arg,
+								args: [],
+								va: false
+							};
+						}else{
+							if(macro.va){
+								if(newMap.__VA_ARGS__.str != ""){
+									newMap.__VA_ARGS__.str += ',';
+								}
+								newMap.__VA_ARGS__.str += arg;
+							}else{
+								log.error(`[PP]: Too more arguments in function-like macro ${matched[0]}`);
+								return line;
+							}
+						}
+					});
+					// Write to line
+					line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + evalMacro(macro.str, newMap);
+					preLastIndex = regex.lastIndex;
+				}else{
+					// Replace macro
+					line += processing.substr(preLastIndex, regex.lastIndex - macroName.length - preLastIndex) + macro.str + paramStr;
+					preLastIndex = regex.lastIndex;
+				}
+				modified = true;
+			}
+		}
+		line += processing.substr(preLastIndex);
+	}while(modified);
+	return line;
 }
