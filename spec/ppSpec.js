@@ -29,7 +29,11 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/comment.expect").toString());
 	});
-	it("can define and evaluate macro");
+	it("can define and evaluate macro", () => {
+		var res = child_process.execFileSync("node", ["pp.js","test/define.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/define.expect").toString());
+	});
 	it("can perform #if, #else, #endif directive");
 	it("can include other file");
 	it("can remove macro definition");
