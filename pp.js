@@ -21,6 +21,9 @@ const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
 var macroMap = {};
+var skipLine = false;
+var ifEnded = false;
+var countIf = 0;
 
 fin.on('data', (data) => {
 	var dataBuf = Buffer.concat([remainBuf, data], remainBuf.length + data.length);
@@ -54,14 +57,24 @@ function runPP(data, lastChunk){
 		}
 		var regex = /\s*#(\\\n|[^\n])*/;
 		if(logicalLine.search(regex) == 0){
-			if(!(runDefine(logicalLine) || runIf(logicalLine))){
+			if(runElse(logicalLine) ||
+				runEndif(logicalLine) ||
+				runElif(logicalLine) ||
+				skipLine ||
+				runIf(logicalLine)||
+				runDefine(logicalLine)
+			){
+				fout.write("\n");
+			}else{
 				logicalLine = logicalLine.trim().substr(1);
 				fout.write(evalMacro(logicalLine, macroMap));
+			}
+		}else{
+			if(!skipLine){
+				fout.write(evalMacro(logicalLine, macroMap) + "\n");
 			}else{
 				fout.write("\n");
 			}
-		}else{
-			fout.write(evalMacro(logicalLine, macroMap) + "\n");
 		}
 		logicalLine = "";
 	}
@@ -121,6 +134,71 @@ function runIf(line){
 	}
 	line = line.substr(line.match(regex)[0].length);
 	line = evalMacro(line, macroMap, true);
+	var value = evalExpr(line);
+	if(value === null){
+		return false;
+	}
+	skipLine = value == 0;
+	countIf += 1;
+	return true;
+}
+
+function runElif(line){
+	line = line.trim();
+	var regex = /#\s*elif\s*/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	if(countIf <= 0){
+		log.error(`[PP]: #elif without #if.`);
+		return false;
+	}else if(skipLine){
+		if(!ifEnded){
+			line = line.substr(line.match(regex)[0].length);
+			line = evalMacro(line, macroMap, true);
+			var value = evalExpr(line);
+			if(value === null){
+				return false;
+			}
+			skipLine = value == 0;
+		}
+	}else{
+		skipLine = true;
+		ifEnded = true;
+	}
+	return true;
+}
+
+function runElse(line){
+	line = line.trim();
+	var regex = /#\s*else\s*/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	if(!ifEnded){
+		skipLine = !skipLine;
+	}
+	if(countIf <= 0){
+		log.error(`[PP]: #else without #if.`);
+		return false;
+	}
+	return true;
+}
+
+function runEndif(line){
+	line = line.trim();
+	var regex = /#\s*endif\s*/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	skipLine = false;
+	startIf = false;
+	ifEnded = false;
+	if(countIf <= 0){
+		log.error(`[PP]: #endif without #if.`);
+		return false;
+	}
+	countIf -= 1;
 	return true;
 }
 
@@ -129,13 +207,13 @@ function evalMacro(line, macromap, evalDefined){
 	do{
 		// Eval defined
 		if(evalDefined){
-			var regex = /(\"(\\\"|[^\"\n])*\"|defined\s*(\(\s*\w+\s*\)|\w+\s*))/g;
+			var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|defined\s*(\(\s*\w+\s*\)|\w+\s*))/g;
 			var preLastIndex = 0;
 			var processing = line.substr();
 			line = "";
 			for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
 				// String literal
-				if(matched[0].startsWith("\"")){
+				if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
 					line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
 					preLastIndex = regex.lastIndex;
 					continue;
@@ -151,14 +229,14 @@ function evalMacro(line, macromap, evalDefined){
 			line += processing.substr(preLastIndex);
 		}
 		// Eval macro
-		var regex = /(\"(\\\"|[^\"\n])*\"|[A-Za-z_]\w*(\s*\(.*\))?)/g;
+		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*(\s*\(.*\))?)/g;
 		var processing = line.substr();
 		line = "";
 		var preLastIndex = 0;
 		modified = false;
 		for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
 			// String literal
-			if(matched[0].startsWith("\"")){
+			if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
 				line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
 				preLastIndex = regex.lastIndex;
 				continue;
@@ -284,4 +362,92 @@ function multiLineComment(data){
 	}
 	data += processing.substr(preLastIndex);
 	return data;
+}
+
+function evalExpr(line){
+	var integerRegex = /(0[xX][\dA-Fa-f]*|0[1-7]*|[1-9]\d*)([uU](ll|LL|[lL])?|(ll|LL|[lL])[uU]?)?/;
+	var floatRegex = /(0[xX](\.[\dA-Fa-f]+|[\dA-Fa-f]+.[\dA-Fa-f]*)[pP][+-]?\d+|((\.\d+|\d+\.\d*)([eE][+-]?\d+)?|\d+[eE][+-]?\d+))[fFlL]?/;
+	var charRegex = /[LuU]?\'(\\([\\\'\"\?\w]|[0-7]{1,3}|x[\dA-Fa-f]+|[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?)|[\w!;<#=%>&\?\[\(\/~\:\*\^\+\],\{\-\|\.\}])*\'/;
+	var punctRegex = /(\|\||&&|!=|==|<<|>>|<=|>=|[\^\|&<>\+\-\*\/%!~\(\)])/;
+	var identRegex = /(\\[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?|[A-Za-z_])(\\[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?|\w)*/;
+	var expr = "";
+	while((line = line.trim()) != ""){
+		if(line.search(floatRegex) == 0){
+			var str = floatRegex.exec(line)[0];
+			log.error(`[PP]: Floating number in preprocessor integer constant expression.`);
+			return null;
+		}else if(line.search(integerRegex) == 0){
+			var str = integerRegex.exec(line)[0];
+			var val = 0;
+			if(str.startsWith("0x") || str.startsWith("0X")){
+				val = Number.parseInt(str, 16);
+			}else if(str.startsWith("0")){
+				val = Number.parseInt(str, 8);
+			}else{
+				val = Number.parseInt(str, 10);
+			}
+			expr += val.toString();
+			line = line.substr(str.length);
+		}else if(line.search(charRegex) == 0){
+			var str = charRegex.exec(line)[0];
+			var oriLen = str.length;
+			str = str.match(/'.*'/)[0];
+			str = str.substr(1, str.length - 2);
+			if(str.startsWith("\\0")){
+				expr += Number.parseInt(str.substr(1),8).toString();
+			}else if(str.startsWith("\\x")){
+				expr += Number.parseInt(str.substr(2),16).toString();
+			}else if(str.startsWith("\\u") || str.startsWith("\\U")){
+				expr += str.substr(2);
+			}else if(str.startsWith("\\")){
+				switch(str.charAt(1)){
+					case '\'':
+					case '\"':
+					case '\\':
+					case '\?':
+						expr += str.charCodeAt(1).toString();
+					break;
+					case 'a':
+						expr += "7";
+					break;
+					case 'b':
+						expr += "8";
+					break;
+					case 'f':
+						expr += "12";
+					break;
+					case 'n':
+						expr += "10";
+					break;
+					case 'r':
+						expr += "13";
+					break;
+					case 't':
+						expr += "9";
+					break;
+					case 'v':
+						expr += "11";
+					break;
+					default:
+						log.error(`[PP]: Unknown escape character in preprocessor integer constant expression.`);
+					return null;
+				}
+			}else{
+				expr += str.charCodeAt(0).toString();
+			}
+			line = line.substr(oriLen);
+		}else if(line.search(punctRegex) == 0){
+			var str = punctRegex.exec(line)[0];
+			expr += str;
+			line = line.substr(str.length);
+		}else if(line.search(identRegex) == 0){
+			var str = identRegex.exec(line)[0];
+			expr += "0";
+			line = line.substr(str.length);
+		}else{
+			log.error(`[PP]: Invalid token in preprocessor integer constant expression.`);
+			return null;
+		}
+	}
+	return eval(expr);
 }

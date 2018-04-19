@@ -1,0 +1,74 @@
+
+
+	int Enter_if;
+
+
+
+
+
+	int Enter_else;
+
+
+
+
+
+
+
+	int Enter_if_nested;
+
+	int Enter_else;
+
+
+
+
+
+	int Enter_elif;
+
+
+
+	int Enter_else_nested;
+
+
+
+
+
+
+
+
+	int Enter_elif_else;
+
+
+
+
+
+	int Enter_elif_if;
+
+
+
+
+
+
+
+	int Enter_elif_if;
+
+
+
+
+
+
+
+
+
+
+
+
+	int Enter_elif_elif;
+
+
+
+
+int main(void){
+	int a[3];
+	return 0;
+	
+}

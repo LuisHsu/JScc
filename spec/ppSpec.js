@@ -34,10 +34,16 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/define.expect").toString());
 	});
-	it("can perform #if, #else, #endif directive");
+	it("can perform #if, #else, #elif, #endif directive", () => {
+		var res = child_process.execFileSync("node", ["pp.js","test/ppIf.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/ppIf.expect").toString());
+	});
+	it("has # and ## operator");
 	it("can include other file");
 	it("can remove macro definition");
 	it("can modify line number setting");
 	it("can abort with #error");
 	it("already prepared mandatory macros");
+	it("has pragma. Though we don't use it now.");
 });
