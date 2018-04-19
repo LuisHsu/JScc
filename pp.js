@@ -67,11 +67,11 @@ function runPP(data, lastChunk){
 				fout.write("\n");
 			}else{
 				logicalLine = logicalLine.trim().substr(1);
-				fout.write(evalMacro(logicalLine, macroMap));
+				fout.write(evalMacro(logicalLine));
 			}
 		}else{
 			if(!skipLine){
-				fout.write(evalMacro(logicalLine, macroMap) + "\n");
+				fout.write(evalMacro(logicalLine) + "\n");
 			}else{
 				fout.write("\n");
 			}
@@ -133,7 +133,7 @@ function runIf(line){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
-	line = evalMacro(line, macroMap, true);
+	line = evalMacro(line, true);
 	var value = evalExpr(line);
 	if(value === null){
 		return false;
@@ -155,7 +155,7 @@ function runElif(line){
 	}else if(skipLine){
 		if(!ifEnded){
 			line = line.substr(line.match(regex)[0].length);
-			line = evalMacro(line, macroMap, true);
+			line = evalMacro(line, true);
 			var value = evalExpr(line);
 			if(value === null){
 				return false;
@@ -202,34 +202,19 @@ function runEndif(line){
 	return true;
 }
 
-function evalMacro(line, macromap, evalDefined){
+function evalMacro(line, evalDefined, argList){
 	var modified = false;
 	do{
+		// Replace args
+		if(argList){
+			line = replaceArgs(line,argList);
+		}
 		// Eval defined
 		if(evalDefined){
-			var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|defined\s*(\(\s*\w+\s*\)|\w+\s*))/g;
-			var preLastIndex = 0;
-			var processing = line.substr();
-			line = "";
-			for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
-				// String literal
-				if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
-					line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
-					preLastIndex = regex.lastIndex;
-					continue;
-				}
-				var macroName = matched[0].substr(7).match(/[A-Za-z_]\w*/)[0];
-				if(macromap[macroName]){
-					line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + " 1 ";
-				}else{
-					line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + " 0 ";
-				}
-				preLastIndex = regex.lastIndex;
-			}
-			line += processing.substr(preLastIndex);
+			line = defined(line);
 		}
 		// Eval macro
-		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*(\s*\(.*\))?)/g;
+		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*(\s*\(.*?\))?)/g;
 		var processing = line.substr();
 		line = "";
 		var preLastIndex = 0;
@@ -244,35 +229,27 @@ function evalMacro(line, macromap, evalDefined){
 			// Macro
 			var macroName = matched[0].match(/[A-Za-z_]\w*/)[0];
 			var paramStr = matched[0].match(/\s*\(.*\)$/);
-			paramStr = paramStr ? evalMacro(paramStr[0], macromap) : "";
-			if(macromap[macroName]){
-				var macro = macromap[macroName];
+			paramStr = paramStr ? evalMacro(paramStr[0], macroMap, null) : "";
+			if(macroMap[macroName]){
+				var macro = macroMap[macroName];
 				if(macro.va || macro.args.length > 0){
 					// Split args
 					var argArray = paramStr.trim().substr(1, paramStr.trim().length - 2).match(/(\"(\\\"|[^\"])*\"|[^,]*)*(,|\s*$)/g)
 						.map(arg => arg.charAt(arg.length - 1) == ',' ? arg.substr(0, arg.length - 1) : arg);
 					argArray.pop();
-					// Generate new macromap
-					var newMap = {
-						__VA_ARGS__:{
-							str: "",
-							args: [],
-							va: false
-						}
+					// Generate argument list
+					var newArgList = {
+						__VA_ARGS__:""
 					};
 					argArray.forEach((arg, index) => {
 						if(index < macro.args.length){
-							newMap[macro.args[index]] = {
-								str: arg,
-								args: [],
-								va: false
-							};
+							newArgList[macro.args[index]] = arg;
 						}else{
 							if(macro.va){
-								if(newMap.__VA_ARGS__.str != ""){
-									newMap.__VA_ARGS__.str += ',';
+								if(newArgList.__VA_ARGS__ != ""){
+									newArgList.__VA_ARGS__ += ',';
 								}
-								newMap.__VA_ARGS__.str += arg;
+								newArgList.__VA_ARGS__ += arg;
 							}else{
 								log.error(`[PP]: Too more arguments in function-like macro ${matched[0]}`);
 								return line;
@@ -280,11 +257,21 @@ function evalMacro(line, macromap, evalDefined){
 						}
 					});
 					// Write to line
-					line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + evalMacro(macro.str, newMap);
+					var expanded = evalMacro(macro.str, evalDefined, newArgList);
+					expanded = hashhash(expanded);
+					line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + expanded;
 					preLastIndex = regex.lastIndex;
 				}else{
 					// Replace macro
-					line += processing.substr(preLastIndex, regex.lastIndex - macroName.length - preLastIndex) + macro.str + paramStr;
+					var leading = processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex);
+					var expanded = evalMacro(macro.str, evalDefined, newArgList);
+					expanded = hashhash(expanded);
+					if(/([^#]|^)#\s*$/.test(leading)){
+						leading = leading.replace(/([^#]|^)#\s*$/,"");
+						line += leading + "\"" + expanded + "\"" + paramStr;
+					}else{
+						line += leading + expanded + paramStr;
+					}
 					preLastIndex = regex.lastIndex;
 				}
 				modified = true;
@@ -292,6 +279,49 @@ function evalMacro(line, macromap, evalDefined){
 		}
 		line += processing.substr(preLastIndex);
 	}while(modified);
+	return line;
+}
+
+function defined(line){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|defined\s*(\(\s*\w+\s*\)|\w+\s*))/g;
+	var preLastIndex = 0;
+	var processing = line.substr();
+	line = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
+			line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		var macroName = matched[0].substr(7).match(/[A-Za-z_]\w*/)[0];
+		if(macroMap[macroName]){
+			line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + " 1 ";
+		}else{
+			line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + " 0 ";
+		}
+		preLastIndex = regex.lastIndex;
+	}
+	line += processing.substr(preLastIndex);
+	return line;
+}
+
+function hashhash(line){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|\s*##\s*)/g;
+	var preLastIndex = 0;
+	var processing = line.substr();
+	line = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
+			line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex);
+		preLastIndex = regex.lastIndex;
+	}
+	line += processing.substr(preLastIndex);
 	return line;
 }
 
@@ -324,6 +354,36 @@ function digraph(data){
 	}
 	data += processing.substr(preLastIndex);
 	return data;
+}
+
+function replaceArgs(line, argList){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*)/g;
+	var preLastIndex = 0;
+	var processing = line.substr();
+	line = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
+			line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		if(argList[matched[0]]){
+			// Replace macro
+			var leading = processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex);
+			if(/([^#]|^)#\s*$/.test(leading)){
+				leading = leading.replace(/([^#]|^)#\s*$/,"");
+				line += leading + "\"" + argList[matched[0]] + "\"";
+			}else{
+				line += leading + argList[matched[0]];
+			}
+		}else{
+			line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+		}
+		preLastIndex = regex.lastIndex;
+	}
+	line += processing.substr(preLastIndex);
+	return line;
 }
 
 function singleLineComment(data){

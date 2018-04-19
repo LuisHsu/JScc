@@ -39,7 +39,11 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/ppIf.expect").toString());
 	});
-	it("has # and ## operator");
+	it("has # and ## operator",() => {
+		var res = child_process.execFileSync("node", ["pp.js","test/hashOp.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/hashOp.expect").toString());
+	});
 	it("can include other file");
 	it("can remove macro definition");
 	it("can modify line number setting");
