@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 require("colors");
+const Path = require('path');
 
 module.exports = (fileName) => {
 	return {
@@ -26,8 +27,8 @@ function addLine(){
 	this.line += 1;
 }
 function errorOut(msg){
-	console.error(`${this.fileName}:${this.line} [Error] ${msg}`.red.bold);
+	console.error(`${Path.basename(this.fileName)}:${this.line} [Error] ${msg}`.red.bold);
 }
 function warnOut(msg){
-	console.error(`${this.fileName}:${this.line} [Warning] ${msg}`.yellow.bold);
+	console.error(`${Path.basename(this.fileName)}:${this.line} [Warning] ${msg}`.yellow.bold);
 }

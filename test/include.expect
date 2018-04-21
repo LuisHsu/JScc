@@ -1,0 +1,11 @@
+# 1 "/home/luishsu/Desktop/jscc/test/included.c"
+enum {
+	ETEST1 = 1,
+	ETEST2 = 3,
+} etest;
+# 1 "/home/luishsu/Desktop/jscc/test/include.c"
+
+
+int main(void){
+	return 0;
+}

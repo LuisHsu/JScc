@@ -13,7 +13,8 @@
 //    limitations under the License.
 
 const fs = require("fs");
-const log = require("./errors")(process.argv[2]);
+const Path = require("path");
+const log = require("./errors")(Path.join(process.cwd(),process.argv[2]));
 
 var remainBuf = Buffer.alloc(0);
 
@@ -37,7 +38,7 @@ fin.on('end', () => {
 	}
 });
 
-function runPP(data, lastChunk){
+function runPP(data, isLastChunk){
 	// Replace digraph
 	data = digraph(data);
 	// Replace single line comment
@@ -47,7 +48,7 @@ function runPP(data, lastChunk){
 	// Process line by line
 	var lineChunk = data.split('\n');
 	var logicalLine = "";
-	for(var chIndex = 0; chIndex < (lastChunk ? lineChunk.length : lineChunk.length - 1); ++chIndex){
+	for(var chIndex = 0; chIndex < (isLastChunk ? lineChunk.length : lineChunk.length - 1); ++chIndex){
 		log.addLine();
 		logicalLine += lineChunk[chIndex];
 		if(logicalLine.charAt(logicalLine.length - 1) == '\\'){
@@ -61,8 +62,9 @@ function runPP(data, lastChunk){
 				runEndif(logicalLine) ||
 				runElif(logicalLine) ||
 				skipLine ||
-				runIf(logicalLine)||
-				runDefine(logicalLine)
+				runIf(logicalLine) ||
+				runDefine(logicalLine) ||
+				runInclude(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -88,7 +90,7 @@ function runDefine(line){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
-	var macroName = line.match(/[_A-Za-z0-9]*/)[0];
+	var macroName = line.match(/\w*/)[0];
 	if(!macroName){
 		log.error(`[PP]: Expected macro name in #define directive`);
 		return false;
@@ -180,6 +182,52 @@ function runElse(line){
 	}
 	if(countIf <= 0){
 		log.error(`[PP]: #else without #if.`);
+		return false;
+	}
+	return true;
+}
+
+function runInclude(line){
+	line = line.trim();
+	var regex = /#\s*include\s*/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	// Get file path
+	var filePath = line.match(/(\"[^\n\"]+\"|<[^\n>]+>)/)[0];
+	if(!filePath){
+		filePath = evalMacro(line).match(/(\"[^\n\"]+\"|<[^\n>]+>)/)[0];
+		if(!filePath){
+			log.error(`[PP]: Expected file path in #include directive`);
+			return false;
+		}
+	}
+	if(filePath.charAt(0) == "\""){
+		filePath = fs.existsSync(Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2))) ? Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2)) : filePath;
+	}
+	if(filePath.charAt(0) == "\"" || filePath.charAt(0) == "<"){
+		filePath = fs.existsSync(Path.resolve(__dirname, "include", filePath.substr(1, filePath.length - 2))) ? Path.resolve(__dirname, "include", filePath.substr(1, filePath.length - 2)) : filePath;
+		if(filePath.charAt(0) == "\"" || filePath.charAt(0) == "<"){
+			log.error(`[PP]: Included file ${filePath} not found`);
+			return false;
+		}
+	}
+	// Get file content
+	try{
+		var fileData = fs.readFileSync(filePath);
+		var oldLine = log.line;
+		var oldFile = log.fileName;
+		log.line = 0;
+		log.fileName = filePath;
+		fout.write(`# 1 "${filePath}"\n`);
+		// Process included data
+		var remain = runPP(fileData.toString(), true);
+		log.line = oldLine;
+		log.fileName = oldFile;
+		fout.write(`# ${oldLine} "${oldFile}"\n`);
+	}catch(err){
+		log.error(`[PP]: File ${filePath} including error: ${err}`);
 		return false;
 	}
 	return true;

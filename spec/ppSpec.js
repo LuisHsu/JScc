@@ -15,6 +15,7 @@
 
 const child_process = require("child_process");
 const helper = require("./helper");
+const Path = require('path');
 const fs = require("fs");
 
 describe("Preprocessor", () => {
@@ -44,10 +45,19 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/hashOp.expect").toString());
 	});
-	it("can include other file");
+	it("can include other file",() => {
+		var oldcwd = process.cwd();
+		process.chdir(Path.join(process.cwd(), 'test'));
+		var res = child_process.execFileSync("node", [Path.join('..', "pp.js"),"include.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("include.expect").toString());
+		helper.cleanTmp();
+		process.chdir(oldcwd);
+	});
+	it("can perform #ifdef, #ifndef directive");
 	it("can remove macro definition");
 	it("can modify line number setting");
-	it("can abort with #error");
+	it("can be aborted by #error");
 	it("already prepared mandatory macros");
 	it("has pragma. Though we don't use it now.");
 });
