@@ -54,7 +54,11 @@ describe("Preprocessor", () => {
 		helper.cleanTmp();
 		process.chdir(oldcwd);
 	});
-	it("can perform #ifdef, #ifndef directive");
+	it("can perform #ifdef, #ifndef directive",() => {
+		var res = child_process.execFileSync("node", ["pp.js","test/ifdef_ifndef.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/ifdef_ifndef.expect").toString());
+	});
 	it("can remove macro definition");
 	it("can modify line number setting");
 	it("can be aborted by #error");

@@ -1,7 +1,7 @@
 const fs = require("fs");
-const child_process = require("child_process");
+const Path = require("path");
 
 module.exports.cleanTmp = () => {
-	fs.unlink("tmp.E", (err) => {
+	fs.unlink(Path.resolve(process.cwd(),"tmp.E"), (err) => {
 	});
 };

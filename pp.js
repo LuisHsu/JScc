@@ -64,7 +64,9 @@ function runPP(data, isLastChunk){
 				skipLine ||
 				runIf(logicalLine) ||
 				runDefine(logicalLine) ||
-				runInclude(logicalLine)
+				runInclude(logicalLine) ||
+				runIfdef(logicalLine) ||
+				runIfndef(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -85,7 +87,7 @@ function runPP(data, isLastChunk){
 
 function runDefine(line){
 	line = line.trim();
-	var regex = /#\s*define\s*/;
+	var regex = /#\s*define\s+/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -130,7 +132,7 @@ function runDefine(line){
 
 function runIf(line){
 	line = line.trim();
-	var regex = /#\s*if\s*/;
+	var regex = /#\s*if\s+/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -145,9 +147,37 @@ function runIf(line){
 	return true;
 }
 
+function runIfdef(line){
+	line = line.trim();
+	var regex = /#\s*ifdef\s+/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	// Get macro name
+	var macro = line.match(/[_A-Za-z]\w*/)[0];
+	skipLine = macroMap[macro] ? false : true;
+	countIf += 1;
+	return true;
+}
+
+function runIfndef(line){
+	line = line.trim();
+	var regex = /#\s*ifndef\s+/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	// Get macro name
+	var macro = line.match(/[_A-Za-z]\w*/)[0];
+	skipLine = macroMap[macro] ? true : false;
+	countIf += 1;
+	return true;
+}
+
 function runElif(line){
 	line = line.trim();
-	var regex = /#\s*elif\s*/;
+	var regex = /#\s*elif\s+/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -173,7 +203,7 @@ function runElif(line){
 
 function runElse(line){
 	line = line.trim();
-	var regex = /#\s*else\s*/;
+	var regex = /#\s*else(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -235,7 +265,7 @@ function runInclude(line){
 
 function runEndif(line){
 	line = line.trim();
-	var regex = /#\s*endif\s*/;
+	var regex = /#\s*endif(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
