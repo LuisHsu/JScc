@@ -67,7 +67,8 @@ function runPP(data, isLastChunk){
 				runInclude(logicalLine) ||
 				runIfdef(logicalLine) ||
 				runIfndef(logicalLine) ||
-				runUndef(logicalLine)
+				runUndef(logicalLine) ||
+				runLine(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -206,6 +207,37 @@ function runIfndef(line){
 	return true;
 }
 
+function runLine(line){
+	line = line.trim();
+	var regex = /\s*#\s*line(\s+|$)/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	// Get line number
+	var regex = /\d+/;
+	var lineNum = line.search(regex);
+	if(!(lineNum == 0)){
+		log.error(`[PP]: Expected line number in #line.`);
+		return false;
+	}
+	lineNum = parseInt(line.match(regex)[0]);
+	if(isNaN(lineNum)){
+		log.error(`[PP]: Invalid line number in #line.`);
+		return false;
+	}
+	log.line = lineNum;
+	line = line.substr(line.match(regex)[0].length);
+	// Get file name (optional)
+	var fileName = line.match(/\"[^\"\n]+\"/);
+	if(fileName){
+		fileName = fileName[0].substr(1, fileName[0].length - 2);
+		log.fileName = fileName;
+	}
+
+	return true;
+}
+
 function runElif(line){
 	line = line.trim();
 	var regex = /#\s*elif(\s+|$)/;
@@ -221,6 +253,9 @@ function runElif(line){
 			line = evalMacro(line, true);
 			var value = evalExpr(line);
 			if(value === null){
+				return false;
+			}else if(value === undefined){
+				log.error(`[PP]: Expected expression in #elif directive`);
 				return false;
 			}
 			skipLine = value == 0;
@@ -266,7 +301,7 @@ function runInclude(line){
 	}
 	filePath = filePath[0];
 	if(filePath.charAt(0) == "\""){
-		filePath = fs.existsSync(Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2))) ? Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2)) : filePath;
+		filePath = fs.existsSync(Path.resolve(Path.dirname(log.fileName), filePath.substr(1, filePath.length - 2))) ? Path.resolve(Path.dirname(log.fileName), filePath.substr(1, filePath.length - 2)) : filePath;
 	}
 	if(filePath.charAt(0) == "\"" || filePath.charAt(0) == "<"){
 		filePath = fs.existsSync(Path.resolve(__dirname, "include", filePath.substr(1, filePath.length - 2))) ? Path.resolve(__dirname, "include", filePath.substr(1, filePath.length - 2)) : filePath;

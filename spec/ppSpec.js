@@ -64,7 +64,15 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/undef.expect").toString());
 	});
-	it("can modify line number setting");
+	it("can modify line number setting", () => {
+		var oldcwd = process.cwd();
+		process.chdir(Path.join(process.cwd(), 'test'));
+		var res = child_process.execFileSync("node", [Path.join('..', "pp.js"),"line.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("line.expect").toString());
+		helper.cleanTmp();
+		process.chdir(oldcwd);
+	});
 	it("can be aborted by #error");
 	it("already prepared mandatory macros");
 	it("has pragma. Though we don't use it now.");
