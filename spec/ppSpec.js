@@ -84,5 +84,9 @@ describe("Preprocessor", () => {
 		expect(res instanceof Buffer).toBeTruthy();
 		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/mandatory.expect").toString());
 	});
-	it("has pragma. Though we don't use it now.");
+	it("has pragma. Though we don't use it now.", () => {
+		var res = child_process.execFileSync("node", ["pp.js","test/pragma.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/pragma.expect").toString());
+	});
 });

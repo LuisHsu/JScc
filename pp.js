@@ -82,7 +82,8 @@ function runPP(data, isLastChunk){
 				runIfndef(logicalLine) ||
 				runUndef(logicalLine) ||
 				runLine(logicalLine) ||
-				runError(logicalLine)
+				runError(logicalLine) ||
+				runPragma(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -203,7 +204,6 @@ function runUndef(line){
 }
 
 function runIfndef(line){
-	line = line.trim();
 	var regex = /\s*#\s*ifndef(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
@@ -222,7 +222,6 @@ function runIfndef(line){
 }
 
 function runLine(line){
-	line = line.trim();
 	var regex = /\s*#\s*line(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
@@ -257,8 +256,7 @@ function runLine(line){
 }
 
 function runElif(line){
-	line = line.trim();
-	var regex = /#\s*elif(\s+|$)/;
+	var regex = /\s*#\s*elif(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -286,8 +284,7 @@ function runElif(line){
 }
 
 function runElse(line){
-	line = line.trim();
-	var regex = /#\s*else(\s+|$)/;
+	var regex = /\s*#\s*else(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -302,8 +299,7 @@ function runElse(line){
 }
 
 function runInclude(line){
-	line = line.trim();
-	var regex = /#\s*include(\s*|$)/;
+	var regex = /\s*#\s*include(\s*|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -349,8 +345,7 @@ function runInclude(line){
 }
 
 function runEndif(line){
-	line = line.trim();
-	var regex = /#\s*endif(\s+|$)/;
+	var regex = /\s*#\s*endif(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -362,6 +357,14 @@ function runEndif(line){
 		return false;
 	}
 	countIf -= 1;
+	return true;
+}
+
+function runPragma(line){
+	var regex = /\s*#\s*pragma(\s+|$)/;
+	if(line.search(regex) != 0){
+		return false;
+	}
 	return true;
 }
 
@@ -388,6 +391,8 @@ function evalMacro(line, evalDefined, argList){
 		if(evalDefined){
 			line = defined(line);
 		}
+		// Skip pragma
+		line = pragma(line);
 		// Eval macro
 		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*(\s*\(.*?\))?)/g;
 		var processing = line.substr();
@@ -480,6 +485,25 @@ function defined(line){
 		}else{
 			line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex) + " 0 ";
 		}
+		preLastIndex = regex.lastIndex;
+	}
+	line += processing.substr(preLastIndex);
+	return line;
+}
+
+function pragma(line){
+	var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|_Pragma\s*\(\s*\"[^\"\n]*\"\s*\))/g;
+	var preLastIndex = 0;
+	var processing = line.substr();
+	line = "";
+	for(var matched = regex.exec(processing); matched != null; matched = regex.exec(processing)){
+		// String literal
+		if(matched[0].startsWith("\"") || matched[0].startsWith("\'")){
+			line += processing.substr(preLastIndex, regex.lastIndex - preLastIndex);
+			preLastIndex = regex.lastIndex;
+			continue;
+		}
+		line += processing.substr(preLastIndex, regex.lastIndex - matched[0].length - preLastIndex);
 		preLastIndex = regex.lastIndex;
 	}
 	line += processing.substr(preLastIndex);
