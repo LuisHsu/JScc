@@ -66,7 +66,8 @@ function runPP(data, isLastChunk){
 				runDefine(logicalLine) ||
 				runInclude(logicalLine) ||
 				runIfdef(logicalLine) ||
-				runIfndef(logicalLine)
+				runIfndef(logicalLine) ||
+				runUndef(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -86,17 +87,17 @@ function runPP(data, isLastChunk){
 }
 
 function runDefine(line){
-	line = line.trim();
-	var regex = /#\s*define\s+/;
+	var regex = /\s*#\s*define(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
-	var macroName = line.match(/\w*/)[0];
+	var macroName = line.match(/\w*/);
 	if(!macroName){
 		log.error(`[PP]: Expected macro name in #define directive`);
 		return false;
 	}
+	macroName = macroName[0];
 	line = line.substr(macroName.length);
 	var macro = {
 		str: "",
@@ -131,45 +132,75 @@ function runDefine(line){
 }
 
 function runIf(line){
-	line = line.trim();
-	var regex = /#\s*if\s+/;
+	var regex = /\s*#\s*if(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
+	countIf += 1;
 	line = evalMacro(line, true);
 	var value = evalExpr(line);
 	if(value === null){
 		return false;
+	}else if(value === undefined){
+		log.error(`[PP]: Expected expression in #if directive`);
+		return false;
 	}
 	skipLine = value == 0;
-	countIf += 1;
 	return true;
 }
 
 function runIfdef(line){
-	line = line.trim();
-	var regex = /#\s*ifdef\s+/;
+	var regex = /\s*#\s*ifdef(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
 	// Get macro name
-	var macro = line.match(/[_A-Za-z]\w*/)[0];
+	var macro = line.match(/[_A-Za-z]\w*/);
+	if(!macro){
+		log.error(`[PP]: Expected macro name in #ifndef.`);
+		return false;
+	}
+	macro = macro[0];
 	skipLine = macroMap[macro] ? false : true;
 	countIf += 1;
 	return true;
 }
 
-function runIfndef(line){
-	line = line.trim();
-	var regex = /#\s*ifndef\s+/;
+function runUndef(line){
+	var regex = /\s*#\s*undef(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
 	// Get macro name
-	var macro = line.match(/[_A-Za-z]\w*/)[0];
+	var macro = line.match(/[_A-Za-z]\w*/);
+	if(!macro){
+		log.error(`[PP]: Expected macro name in #undef.`);
+		return false;
+	}
+	macro = macro[0];
+	if(macroMap[macro]){
+		delete macroMap[macro];
+	}
+	return true;
+}
+
+function runIfndef(line){
+	line = line.trim();
+	var regex = /\s*#\s*ifndef(\s+|$)/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	// Get macro name
+	var macro = line.match(/[_A-Za-z]\w*/);
+	if(!macro){
+		log.error(`[PP]: Expected macro name in #ifdef.`);
+		return false;
+	}
+	macro = macro[0];
 	skipLine = macroMap[macro] ? true : false;
 	countIf += 1;
 	return true;
@@ -177,7 +208,7 @@ function runIfndef(line){
 
 function runElif(line){
 	line = line.trim();
-	var regex = /#\s*elif\s+/;
+	var regex = /#\s*elif(\s+|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
@@ -219,20 +250,21 @@ function runElse(line){
 
 function runInclude(line){
 	line = line.trim();
-	var regex = /#\s*include\s*/;
+	var regex = /#\s*include(\s*|$)/;
 	if(line.search(regex) != 0){
 		return false;
 	}
 	line = line.substr(line.match(regex)[0].length);
 	// Get file path
-	var filePath = line.match(/(\"[^\n\"]+\"|<[^\n>]+>)/)[0];
+	var filePath = line.match(/(\"[^\n\"]+\"|<[^\n>]+>)/);
 	if(!filePath){
-		filePath = evalMacro(line).match(/(\"[^\n\"]+\"|<[^\n>]+>)/)[0];
+		filePath = evalMacro(line).match(/(\"[^\n\"]+\"|<[^\n>]+>)/);
 		if(!filePath){
 			log.error(`[PP]: Expected file path in #include directive`);
 			return false;
 		}
 	}
+	filePath = filePath[0];
 	if(filePath.charAt(0) == "\""){
 		filePath = fs.existsSync(Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2))) ? Path.resolve(process.cwd(), filePath.substr(1, filePath.length - 2)) : filePath;
 	}
@@ -587,5 +619,10 @@ function evalExpr(line){
 			return null;
 		}
 	}
-	return eval(expr);
+	try{
+		return eval(expr);
+	}catch(err){
+		log.error(`[PP]: Invalid expression in preprocessor integer constant expression.`);
+		return null;
+	}
 }
