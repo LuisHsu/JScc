@@ -20,7 +20,8 @@ module.exports = (fileName) => {
 		line: 0,
 		error: errorOut,
 		addLine: addLine,
-		warning: warnOut
+		warning: warnOut,
+		hasError: false
 	};
 };
 function addLine(){
@@ -28,6 +29,7 @@ function addLine(){
 }
 function errorOut(msg){
 	console.error(`${Path.basename(this.fileName)}:${this.line} [Error] ${msg}`.red.bold);
+	this.hasError = true;
 }
 function warnOut(msg){
 	console.error(`${Path.basename(this.fileName)}:${this.line} [Warning] ${msg}`.yellow.bold);

@@ -1,0 +1,20 @@
+
+	int is_stdc;
+
+
+
+
+
+
+
+	int not_hosted;
+
+
+int v = 201104L;
+
+int line = 15;
+
+int main(void){
+
+	return 0;
+}

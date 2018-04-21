@@ -21,7 +21,15 @@ var remainBuf = Buffer.alloc(0);
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
-var macroMap = {};
+var macroMap = {
+	__STDC__: {str: "1", args: [], va: false},
+	__STDC_HOSTED__: {str: "0", args: [], va: false},
+	__STDC_VERSION__: {str: "201104L", args: [], va: false},
+	__DATE__: {str: getDateStr(), args: [], va: false},
+	__FILE__: {str: "", args: [], va: false},
+	__LINE__: {str: "", args: [], va: false},
+	__TIME__: {str: "", args: [], va: false}
+};
 var skipLine = false;
 var ifEnded = false;
 var countIf = 0;
@@ -35,6 +43,11 @@ fin.on('data', (data) => {
 fin.on('end', () => {
 	if(remainBuf.length > 0){
 		runPP(remainBuf.toString(), true);
+	}
+	if(log.hasError){
+		process.exitCode = -1;
+		fout.close();
+		fs.unlink(process.argv[3],(err) => {});
 	}
 });
 
@@ -68,7 +81,8 @@ function runPP(data, isLastChunk){
 				runIfdef(logicalLine) ||
 				runIfndef(logicalLine) ||
 				runUndef(logicalLine) ||
-				runLine(logicalLine)
+				runLine(logicalLine) ||
+				runError(logicalLine)
 			){
 				fout.write("\n");
 			}else{
@@ -218,8 +232,12 @@ function runLine(line){
 	var regex = /\d+/;
 	var lineNum = line.search(regex);
 	if(!(lineNum == 0)){
-		log.error(`[PP]: Expected line number in #line.`);
-		return false;
+		line = evalMacro(line);
+		lineNum = line.search(regex);
+		if(!(lineNum == 0)){
+			log.error(`[PP]: Expected line number in #line.`);
+			return false;
+		}
 	}
 	lineNum = parseInt(line.match(regex)[0]);
 	if(isNaN(lineNum)){
@@ -347,6 +365,18 @@ function runEndif(line){
 	return true;
 }
 
+function runError(line){
+	line = line.trim();
+	var regex = /\s*#\s*error(\s+|$)/;
+	if(line.search(regex) != 0){
+		return false;
+	}
+	line = line.substr(line.match(regex)[0].length);
+	log.error(`[PP]: ${line}`);
+
+	return true;
+}
+
 function evalMacro(line, evalDefined, argList){
 	var modified = false;
 	do{
@@ -371,6 +401,11 @@ function evalMacro(line, evalDefined, argList){
 				preLastIndex = regex.lastIndex;
 				continue;
 			}
+			// Update __FILE__, __LINE__, __TIME__
+			const curDate = new Date();
+			macroMap.__FILE__.str = `"${log.fileName}"`;
+			macroMap.__LINE__.str = log.line.toString();
+			macroMap.__TIME__.str = `"${curDate.getHours() < 10 ? "0" + curDate.getHours() : curDate.getHours()}:${curDate.getMinutes() < 10 ? "0" + curDate.getMinutes() : curDate.getMinutes()}:${curDate.getSeconds() < 10 ? "0" + curDate.getSeconds() : curDate.getSeconds()}"`;
 			// Macro
 			var macroName = matched[0].match(/[A-Za-z_]\w*/)[0];
 			var paramStr = matched[0].match(/\s*\(.*\)$/);
@@ -660,4 +695,50 @@ function evalExpr(line){
 		log.error(`[PP]: Invalid expression in preprocessor integer constant expression.`);
 		return null;
 	}
+}
+
+function getDateStr(){
+	const curDate = new Date();
+	var ret = "\"";
+	switch(curDate.getMonth()){
+		case 0:
+			ret += "Jan ";
+		break;
+		case 1:
+			ret += "Feb ";
+		break;
+		case 2:
+			ret += "Mar ";
+		break;
+		case 3:
+			ret += "Apr ";
+		break;
+		case 4:
+			ret += "May ";
+		break;
+		case 5:
+			ret += "Jun ";
+		break;
+		case 6:
+			ret += "Jul ";
+		break;
+		case 7:
+			ret += "Aug ";
+		break;
+		case 8:
+			ret += "Sep ";
+		break;
+		case 9:
+			ret += "Oct ";
+		break;
+		case 10:
+			ret += "Nov ";
+		break;
+		default:
+			ret += "Dec ";
+		break;
+	}
+	ret += curDate.getDate();
+	ret += " " + curDate.getFullYear() + "\"";
+	return ret;
 }

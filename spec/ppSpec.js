@@ -20,6 +20,7 @@ const fs = require("fs");
 
 describe("Preprocessor", () => {
 	afterAll(helper.cleanTmp);
+
 	it("can replace digraphs to source character", () => {
 		var res = child_process.execFileSync("node", ["pp.js","test/digraphs.c", "tmp.E"]);
 		expect(res instanceof Buffer).toBeTruthy();
@@ -73,7 +74,15 @@ describe("Preprocessor", () => {
 		helper.cleanTmp();
 		process.chdir(oldcwd);
 	});
-	it("can be aborted by #error");
-	it("already prepared mandatory macros");
+	it("can be aborted by #error", () => {
+		expect(function (){child_process.execFileSync("node", ["pp.js","test/error.c", "tmp.E"],{stdio: ['pipe', 'pipe', 'ignore']});
+		}).toThrow();
+		expect(fs.existsSync("tmp.E")).toBeFalsy();
+	});
+	it("already prepared mandatory macros", () => {
+		var res = child_process.execFileSync("node", ["pp.js","test/mandatory.c", "tmp.E"]);
+		expect(res instanceof Buffer).toBeTruthy();
+		expect(fs.readFileSync("tmp.E").toString()).toBe(fs.readFileSync("test/mandatory.expect").toString());
+	});
 	it("has pragma. Though we don't use it now.");
 });
