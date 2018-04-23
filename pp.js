@@ -633,7 +633,7 @@ function evalExpr(line){
 	var floatRegex = /(0[xX](\.[\dA-Fa-f]+|[\dA-Fa-f]+.[\dA-Fa-f]*)[pP][+-]?\d+|((\.\d+|\d+\.\d*)([eE][+-]?\d+)?|\d+[eE][+-]?\d+))[fFlL]?/;
 	var charRegex = /[LuU]?\'(\\([\\\'\"\?\w]|[0-7]{1,3}|x[\dA-Fa-f]+|[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?)|[\w!;<#=%>&\?\[\(\/~\:\*\^\+\],\{\-\|\.\}])*\'/;
 	var punctRegex = /(\|\||&&|!=|==|<<|>>|<=|>=|[\^\|&<>\+\-\*\/%!~\(\)])/;
-	var identRegex = /(\\[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?|[A-Za-z_])(\\[uU][\dA-Fa-f]{4}([\dA-Fa-f]{4})?|\w)*/;
+	var identRegex = /(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|[A-Za-z_])(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|\w)*/;
 	var expr = "";
 	while((line = line.trim()) != ""){
 		if(line.search(floatRegex) == 0){
@@ -766,3 +766,7 @@ function getDateStr(){
 	ret += " " + curDate.getFullYear() + "\"";
 	return ret;
 }
+
+module.exports = {
+	digraph: digraph
+};
