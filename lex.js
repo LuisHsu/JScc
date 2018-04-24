@@ -19,6 +19,17 @@ class Lexer extends Transform{
 	constructor(option){
 		super(option);
 		this.dataStr = "";
+		this.on('unpipe',() => {
+			var tokens = [];
+			for(var token = this.getToken(this); token != null; token = this.getToken(this)){
+				tokens.push(JSON.stringify(token));
+			}
+			var str = "";
+			tokens.forEach((token) => {
+				str += token + '\n';
+			});
+			this.push(str);
+		});
 	}
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();
@@ -32,16 +43,6 @@ class Lexer extends Transform{
 				str += token + '\n';
 			});
 			this.push(str);
-		}catch(err){
-			callback(err, null);
-		}
-	}
-	_flush(data){
-		this.dataStr += data.toString();
-		try{
-			for(var token = this.getToken(); token != null; token = this.getToken()){
-				this.push(JSON.stringify(token) + "\n");
-			}
 		}catch(err){
 			callback(err, null);
 		}
@@ -123,25 +124,51 @@ class Lexer extends Transform{
 		var regex = /^(u8|u|U|L)?\"(\\\"|[^\"\n])*\"/;
 		var matched = regex.exec(this.dataStr);
 		if(matched){
-			regex = /(\\(x[0-9A-Fa-f]+|\d{1:3}|[\'\"\?\\abfnrtv])|.)/g;
+			regex = /(\\(x[\dA-Fa-f]+|u[\dA-Fa-f]{4}|U[\dA-Fa-f]{8}|[0-7]{1,3}|[\'\"\?\\abfnrtv])|[\w!\;<#=%>&\?\'\[\(\)\]\*\^\+\,\{-\|\.\}\/~\:])/g;
 			this.dataStr = this.dataStr.substr(matched[0].length);
 			var str = "";
 			var charSize = 1;
 			if(matched[0].startsWith("u8")){
 				// UTF-8 string
 				str = matched[0].substr(3, matched[0].length - 4);
+				charSize = 1;
 			}else if(matched[0].startsWith("u") || matched[0].startsWith("L")){
 				// UTF-16 string
 				str = matched[0].substr(2, matched[0].length - 3);
+				charSize = 2;
 			}else if(matched[0].startsWith("U")){
 				// UTF-32 string
 				str = matched[0].substr(2, matched[0].length - 3);
+				charSize = 4;
 			}else{
 				// Normal string
 				str = matched[0].substr(1, matched[0].length - 2);
+				charSize = 1;
 			}
 			var buffers = [];
 			for(var character = regex.exec(str); character != null; character = regex.exec(str)){
+				var newBuf = Buffer.alloc(charSize);
+				character = character[0];
+				var chVal = "";
+				if(character.startsWith("\\x")||character.startsWith("\\u")||character.startsWith("\\U")){
+					chVal = parseInt(character.substr(2), 16);
+				}else if(character.startsWith("\\")){
+					chVal = parseInt(character.substr(1), 8);
+				}else{
+					chVal = character.charCodeAt(0);
+				}
+				switch(charSize){
+					case 4:
+						newBuf.writeUInt32LE(chVal);
+					break;
+					case 2:
+						newBuf.writeUInt16LE(chVal);
+					break;
+					default:
+						newBuf.writeUInt8(chVal);
+					break;
+				}
+				buffers.push(newBuf);
 			}
 			return {
 				type: 'string',

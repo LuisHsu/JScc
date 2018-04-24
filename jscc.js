@@ -24,5 +24,9 @@ fin.pipe(pp,{end:false})
 	fs.unlink(process.argv[3], (err) => {});
 	process.exit(-1);
 })
-.pipe(lexer)
+.pipe(lexer,{end:false})
+.on('error',(err) => {
+	fs.unlink(process.argv[3], (err) => {});
+	process.exit(-1);
+})
 .pipe(fout);
