@@ -14,7 +14,7 @@
 
 const fs = require("fs");
 const Path = require("path");
-const log = require("./errors")(Path.join(process.cwd(),process.argv[2]));
+const log = require("./errors")(process.cwd() + Path.sep + process.argv[2]);
 const { Transform } = require('stream');
 
 class Preprocessor extends Transform{
