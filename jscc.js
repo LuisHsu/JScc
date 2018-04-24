@@ -13,9 +13,16 @@
 //    limitations under the License.
 
 const fs = require('fs');
+const pp = require('./pp');
 const lexer = require('./lex');
 
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
-fin.pipe(lexer).pipe(fout);
+fin.pipe(pp)
+.on('error',(err) => {
+	fs.unlink(process.argv[3], (err) => {});
+	process.exit(-1);
+})
+.pipe(lexer)
+.pipe(fout);
