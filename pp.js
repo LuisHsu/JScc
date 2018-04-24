@@ -33,10 +33,12 @@ class Preprocessor extends Transform{
 		this.skipLine = false;
 		this.ifEnded = false;
 		this.countIf = 0;
+		this.outStr = "";
 		this.on('unpipe', () => {
 			try{
 				if(this.dataStr != "" && log.hasError == false){
 					this.runPP(this.dataStr,true);
+					this.push(this.outStr);
 				}
 			}catch(err){
 				log.error(err);
@@ -48,10 +50,15 @@ class Preprocessor extends Transform{
 		this.dataStr += data.toString();
 		try{
 			this.dataStr = this.runPP(this.dataStr);
+			this.push(this.outStr);
+			this.outStr = "";
 		}catch(err){
 			log.error(err);
 			this.emit('error', err);
 		}
+	}
+	out(data){
+		this.outStr += data;
 	}
 	runPP(data, isLastChunk){
 		// Replace digraph
@@ -68,7 +75,7 @@ class Preprocessor extends Transform{
 			logicalLine += lineChunk[chIndex];
 			if(logicalLine.charAt(logicalLine.length - 1) == '\\'){
 				logicalLine = logicalLine.substr(0, logicalLine.length - 1);
-				this.push("\n");
+				this.out("\n");
 				continue;
 			}
 			var regex = /\s*#(\\\n|[^\n])*/;
@@ -87,16 +94,16 @@ class Preprocessor extends Transform{
 					this.runError(logicalLine) ||
 					this.runPragma(logicalLine)
 				){
-					this.push("\n");
+					this.out("\n");
 				}else{
 					logicalLine = logicalLine.trim().substr(1);
-					this.push(this.evalMacro(logicalLine));
+					this.out(this.evalMacro(logicalLine));
 				}
 			}else{
 				if(!this.skipLine){
-					this.push(this.evalMacro(logicalLine) + "\n");
+					this.out(this.evalMacro(logicalLine) + "\n");
 				}else{
-					this.push("\n");
+					this.out("\n");
 				}
 			}
 			logicalLine = "";
@@ -310,12 +317,12 @@ class Preprocessor extends Transform{
 			var oldFile = log.fileName;
 			log.line = 0;
 			log.fileName = filePath;
-			this.push(`# 1 "${filePath}"\n`);
+			this.out(`# 1 "${filePath}"\n`);
 			// Process included data
 			var remain = this.runPP(fileData.toString(), true);
 			log.line = oldLine;
 			log.fileName = oldFile;
-			this.push(`# ${oldLine} "${oldFile}"\n`);
+			this.out(`# ${oldLine} "${oldFile}"\n`);
 		}catch(err){
 			throw `[PP]: File ${filePath} including error: ${err}`;
 		}
