@@ -19,7 +19,7 @@ const lexer = require('./lex');
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
-fin.pipe(pp)
+fin.pipe(pp,{end:false})
 .on('error',(err) => {
 	fs.unlink(process.argv[3], (err) => {});
 	process.exit(-1);

@@ -23,9 +23,15 @@ class Lexer extends Transform{
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();
 		try{
+			var tokens = [];
 			for(var token = this.getToken(this); token != null; token = this.getToken(this)){
-				this.push(JSON.stringify(token));
+				tokens.push(JSON.stringify(token));
 			}
+			var str = "";
+			tokens.forEach((token) => {
+				str += token + '\n';
+			});
+			this.push(str);
 		}catch(err){
 			callback(err, null);
 		}
@@ -34,7 +40,7 @@ class Lexer extends Transform{
 		this.dataStr += data.toString();
 		try{
 			for(var token = this.getToken(); token != null; token = this.getToken()){
-				this.push(JSON.stringify(token));
+				this.push(JSON.stringify(token) + "\n");
 			}
 		}catch(err){
 			callback(err, null);
@@ -43,7 +49,12 @@ class Lexer extends Transform{
 	getToken(){
 		var token;
 		this.dataStr = this.dataStr.trim();
-		if((token = tokKeyword())||(token = tokIdentifier())){
+		if(
+			(token = this.tokString())||
+			(token = this.tokKeyword())||
+			(token = this.tokIdentifier())||
+			(token = this.tokPunctuator())
+		){
 			return token;
 		}
 		return null;
@@ -100,12 +111,59 @@ class Lexer extends Transform{
 
 	}
 
-	tokString(){
+	tokInteger(){
 
 	}
 
-	tokPunctuator(){
+	tokCharacter(){
 
+	}
+
+	tokString(){
+		var regex = /^(u8|u|U|L)?\"(\\\"|[^\"\n])*\"/;
+		var matched = regex.exec(this.dataStr);
+		if(matched){
+			regex = /(\\(x[0-9A-Fa-f]+|\d{1:3}|[\'\"\?\\abfnrtv])|.)/g;
+			this.dataStr = this.dataStr.substr(matched[0].length);
+			var str = "";
+			var charSize = 1;
+			if(matched[0].startsWith("u8")){
+				// UTF-8 string
+				str = matched[0].substr(3, matched[0].length - 4);
+			}else if(matched[0].startsWith("u") || matched[0].startsWith("L")){
+				// UTF-16 string
+				str = matched[0].substr(2, matched[0].length - 3);
+			}else if(matched[0].startsWith("U")){
+				// UTF-32 string
+				str = matched[0].substr(2, matched[0].length - 3);
+			}else{
+				// Normal string
+				str = matched[0].substr(1, matched[0].length - 2);
+			}
+			var buffers = [];
+			for(var character = regex.exec(str); character != null; character = regex.exec(str)){
+			}
+			return {
+				type: 'string',
+				value: Buffer.concat(buffers, charSize * buffers.length)
+			};
+		}else{
+			return null;
+		}
+	}
+
+	tokPunctuator(){
+		var regex = /^(%\:%\:|\.\.\.|>>=|<<=|\->|\+\+|\-\-|<=|>=|<<|>>|\*=|\/=|%=|\+=|\-=|##|<\:|\:>|<%|%>|%\:|==|!=|&=|\^=|&&|\|\||\|=|\[|\]|\(|\)|\{|\}|\.|&|\*|\+|\-|~|!|\/|%|<|>|\?|\:|;|=|\,|#|\^|\|)/;
+		var matched = regex.exec(this.dataStr);
+		if(matched){
+			this.dataStr = this.dataStr.substr(matched[0].length);
+			return {
+				type: 'punctuator',
+				value: matched[0]
+			};
+		}else{
+			return null;
+		}
 	}
 }
 module.exports = new Lexer();
