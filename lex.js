@@ -54,6 +54,7 @@ class Lexer extends Transform{
 			(token = this.tokString())||
 			(token = this.tokCharacter())||
 			(token = this.tokFloat())||
+			(token = this.tokInteger())||
 			(token = this.tokKeyword())||
 			(token = this.tokIdentifier())||
 			(token = this.tokPunctuator())
@@ -152,7 +153,47 @@ class Lexer extends Transform{
 	}
 
 	tokInteger(){
-
+		var regex = /^(0x[\dA-Fa-f]+|0[0-7]*|\d+)([uU]?(ll|LL|[lL])?[uU]?)?/;
+		var matched = regex.exec(this.dataStr);
+		if(matched){
+			this.dataStr = this.dataStr.substr(matched[0].length);
+			var val = 0;
+			var size = 4;
+			var unsigned = false;
+			if(matched[0].startsWith("0x") || matched[0].startsWith("0X")){
+				// hexadecimal
+				if(matched[1]){
+					val = parseInt(matched[1], 16);
+				}
+			}else if(matched[0].startsWith("0")){
+				// octal
+				if(matched[1]){
+					val = parseInt(matched[1], 8);
+				}
+			}else{
+				// decimal
+				if(matched[1]){
+					val = parseInt(matched[1]);
+				}
+			}
+			// Suffix
+			if(matched[2]){
+				if(matched[2].search('u') != -1 || matched[2].search('U') != -1){
+					unsigned = true;
+				}
+				if(matched[2].search('ll') != -1 || matched[2].search('LL') != -1){
+					size = 8;
+				}
+			}
+			return {
+				type: 'integer',
+				value: val,
+				unsigned: unsigned,
+				size: size
+			};
+		}else{
+			return null;
+		}
 	}
 
 	tokCharacter(){
