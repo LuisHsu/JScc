@@ -25,8 +25,5 @@
   "bugs": {
     "url": "https://github.com/LuisHsu/jscc/issues"
   },
-  "homepage": "https://github.com/LuisHsu/jscc#readme",
-  "dependencies": {
-    "colors": "^1.2.1"
-  }
+  "homepage": "https://github.com/LuisHsu/jscc#readme"
 }

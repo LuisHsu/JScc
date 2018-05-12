@@ -11,7 +11,6 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-require("colors");
 const Path = require('path');
 
 module.exports = (fileName) => {
@@ -28,9 +27,9 @@ function addLine(){
 	this.line += 1;
 }
 function errorOut(msg){
-	console.error(`${Path.basename(this.fileName)}:${this.line} [Error] ${msg}`.red.bold);
+	console.error(`\x1b[31m\x1b[1m${Path.basename(this.fileName)}:${this.line} [Error] ${msg}\x1b[0m`);
 	this.hasError = true;
 }
 function warnOut(msg){
-	console.error(`${Path.basename(this.fileName)}:${this.line} [Warning] ${msg}`.yellow.bold);
+	console.error(`\x1b[33m\x1b[1m${Path.basename(this.fileName)}:${this.line} [Warning] ${msg}\x1b[0m`);
 }
