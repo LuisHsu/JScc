@@ -34,17 +34,20 @@ class Preprocessor extends Transform{
 		this.ifEnded = false;
 		this.countIf = 0;
 		this.outStr = "";
-		this.on('unpipe', () => {
-			try{
-				if(this.dataStr != "" && log.hasError == false){
-					this.runPP(this.dataStr,true);
-					this.push(this.outStr);
+		this.on('pipe', ((src) => {
+			src.on('end', (() => {
+				try{
+					if(this.dataStr != "" && log.hasError == false){
+						this.runPP(this.dataStr,true);
+						this.push(this.outStr);
+					}
+					this.emit('end');
+				}catch(err){
+					log.error(err);
+					this.emit('error', err);
 				}
-			}catch(err){
-				log.error(err);
-				this.emit('error', err);
-			}
-		});
+			}).bind(this));
+		}).bind(this));
 	}
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();

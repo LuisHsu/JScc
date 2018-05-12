@@ -19,17 +19,20 @@ class Lexer extends Transform{
 	constructor(option){
 		super(option);
 		this.dataStr = "";
-		this.on('unpipe',() => {
-			var tokens = [];
-			for(var token = this.getToken(this); token != null; token = this.getToken(this)){
-				tokens.push(JSON.stringify(token));
-			}
-			var str = "";
-			tokens.forEach((token) => {
-				str += token + '\n';
-			});
-			this.push(str);
-		});
+		this.on('pipe',((src) => {
+			src.on('end', (() => {
+				var tokens = [];
+				for(var token = this.getToken(this); token != null; token = this.getToken(this)){
+					tokens.push(JSON.stringify(token));
+				}
+				var str = "";
+				tokens.forEach((token) => {
+					str += token + '\n';
+				});
+				this.push(str);
+				this.emit('end');
+			}).bind(this));
+		}).bind(this));
 	}
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();

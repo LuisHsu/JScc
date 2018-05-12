@@ -15,18 +15,24 @@
 const fs = require('fs');
 const pp = require('./pp');
 const lexer = require('./lex');
+const parser = require('./parser');
 
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 
-fin.pipe(pp,{end:false})
+fin.pipe(pp)
 .on('error',(err) => {
 	fs.unlink(process.argv[3], (err) => {});
 	process.exit(-1);
 })
-.pipe(lexer,{end:false})
+.pipe(lexer)
 .on('error',(err) => {
 	fs.unlink(process.argv[3], (err) => {});
-	process.exit(-1);
+	process.exit(-2);
+})
+.pipe(parser)
+.on('error',(err) => {
+	fs.unlink(process.argv[3], (err) => {});
+	process.exit(-3);
 })
 .pipe(fout);
