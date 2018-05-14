@@ -1,10 +1,14 @@
 
 module.exports = {
-	start: "translation_unit",
+	start: [
+		["translation_unit", "EOF"]
+	],
 	primary_expression: [
 		["identifier"],
-		["constant"],
-		["string_literal"],
+		["floating"],
+		["integer"],
+		["character"],
+		["string"],
 		["(","expression",")"],
 		["generic_selection"]
 	],
@@ -13,7 +17,7 @@ module.exports = {
 	],
 	generic_assoc_list: [
 		["generic_association"],
-		["geneic_assoc_list", ",", "generic_association"]
+		["generic_assoc_list", ",", "generic_association"]
 	],
 	generic_association: [
 		["type_name", ":", "assignment_expression"],
@@ -22,7 +26,7 @@ module.exports = {
 	postfix_expression: [
 		["primary_expression"],
 		["postfix_expression", "[", "expression", "]"],
-		["postfix_expression", "(", "argument-expression-list\t", "]"],
+		["postfix_expression", "(", "argument_expression_list\t", "]"],
 		["postfix_expression", ".", "identifier"],
 		["postfix_expression", "->", "identifier"],
 		["postfix_expression", "++"],
@@ -330,6 +334,10 @@ module.exports = {
 	block_item_list: [
 		["block_item"],
 		["block_item_list", "block_item"]
+	],
+	block_item: [
+		["declaration"],
+		["statement"]
 	],
 	expression_statement: [
 		["expression\t", ";"]
