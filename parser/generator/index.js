@@ -44,6 +44,20 @@ Object.keys(firstSet).forEach((key) => {
 for(var modified = true; modified; ){
 	modified = false;
 	Object.keys(rule).forEach((nonterm) => {
+		rule[nonterm].forEach((subrule) => {
+			if(firstSet[subrule[0]]){
+				firstSet[subrule[0]].forEach((elem) => {
+					if(!firstSet[nonterm]){
+						firstSet[nonterm] = []
+					}else if(!firstSet[nonterm].find((first) => {
+						return first == elem;
+					})){
+						firstSet[nonterm].push(elem);
+						modified = true;
+					}
+				});
+			}
+		});
 	});
 }
 
