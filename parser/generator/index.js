@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const rule = require('./rule');
+
 // Get terminals and expand opt element
 var nonTerms = Object.keys(rule);
 var terms = {};
@@ -48,7 +49,8 @@ for(var modified = true; modified; ){
 			if(firstSet[subrule[0]]){
 				firstSet[subrule[0]].forEach((elem) => {
 					if(!firstSet[nonterm]){
-						firstSet[nonterm] = []
+						firstSet[nonterm] = [elem];
+						modified = true;
 					}else if(!firstSet[nonterm].find((first) => {
 						return first == elem;
 					})){
@@ -61,4 +63,57 @@ for(var modified = true; modified; ){
 	});
 }
 
-fs.writeFile('out.txt', JSON.stringify(firstSet, null, '\t'), () => {});
+// Follow set
+var followSet = {
+	start: ["EOF"]
+};
+for(var modified = true; modified; ){
+	modified = false;
+	Object.keys(rule).forEach((nonterm) => {
+		rule[nonterm].forEach((subrule) => {
+			subrule.forEach((elem, index) => {
+				if(index == subrule.length - 1){
+					// empty
+					if(followSet[nonterm]){
+						followSet[nonterm].forEach((follow) => {
+							if(!followSet[elem]){
+								followSet[elem] = [follow];
+								modified = true;
+							}else if(!followSet[elem].find((xfollow) => {
+								return follow == xfollow;
+							})){
+								followSet[elem].push(follow);
+								modified = true;
+							}
+						});
+					}
+				}else{
+					// non-empty
+					firstSet[subrule[index + 1]].forEach((follow) => {
+						if(!followSet[elem]){
+							followSet[elem] = [follow];
+							modified = true;
+						}else if(!followSet[elem].find((xfollow) => {
+							return follow == xfollow;
+						})){
+							followSet[elem].push(follow);
+							modified = true;
+						}
+					});
+				}
+			});
+		});
+	});
+}
+
+// LR(1) States
+var states = [];
+Object.keys(rule).forEach((nonterm) => {
+	rule[nonterm].forEach((subrule) => {
+		subrule.forEach((elem, index) => {
+
+		});
+	});
+});
+
+fs.writeFile('out.txt', JSON.stringify(followSet, null, '\t'), () => {});
