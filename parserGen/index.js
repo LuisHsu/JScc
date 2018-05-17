@@ -13,7 +13,7 @@
 //    limitations under the License.
 
 const fs = require('fs');
-const rule = require('./rule');
+const rule = require('./testRule');
 // Get start
 var ruleStart = rule.start;
 delete rule.start;
@@ -78,8 +78,8 @@ var states = [closure({
 	}],
 	gotos: {}
 })];
-function itemCompare(a, b){
-	if(a.nonterm != b.nonterm || a.index != b.index){
+function itemCompare(a, b, skipLookahead){
+	if(!a || !b || a.nonterm != b.nonterm || a.index != b.index){
 		return false;
 	}
 	if(a.elements.length != b.elements.length || a.lookahead.length != b.lookahead.length){
@@ -88,6 +88,15 @@ function itemCompare(a, b){
 	for(var i = 0; i < a.elements.length; ++i){
 		if(a.elements[i] != b.elements[i]){
 			return false;
+		}
+	}
+	if(!skipLookahead){
+		var aLooks = Object.keys(a.lookahead);
+		var bLooks = Object.keys(b.lookahead);
+		for(var i = 0; i < aLooks.length; ++i){
+			if(aLooks[i] != bLooks[i]){
+				return false;
+			}
 		}
 	}
 	return true;
@@ -121,13 +130,6 @@ function closure(itemSet){
 					if(!findItem){
 						itemSet.items.push(newItem);
 						modified = true;
-					}else{
-						var findKeys = Object.keys(findItem.lookahead);
-						var assigned = Object.assign(findItem.lookahead, newItem.lookahead);
-						if(findKeys.length != Object.keys(assigned).length){
-							findItem.lookahead = assigned;
-							modified = true;
-						}
 					}
 				});
 			}
@@ -135,22 +137,37 @@ function closure(itemSet){
 	}
 	return itemSet;
 }
-function goto(itemSet, symbol){
-	var newSet = {
-		items: [],
-		gotos: {}
-	};
-	itemSet.items.forEach((item) => {
-		if(item.index < item.elements.length && item.elements[item.index] == symbol){
-			var newItem = Object.assign({}, item);
-			newItem.index += 1;
-			newSet.items.push(newItem);
+function gotoGet(item, symbol){
+	// Search the same core item from states
+	var newItem = Object.assign({}, item);
+	newItem.index += 1;
+	var itemIndex = -1;
+	var gotoIndex = states.findIndex((state) => {
+		for(var i = 0; i < state.items.length; ++i){
+			if(state.items[i].index != 0 && itemCompare(state.items[i], newItem, true)){
+				itemIndex = i;
+				return true;
+			}
 		}
+		return false;
 	});
-	if(newSet.items.length == 0){
-		return null;
+	if(gotoIndex != -1){
+		// Found the same core
+		states[gotoIndex].items[itemIndex].lookahead = Object.assign(states[gotoIndex].items[itemIndex].lookahead, item.lookahead);
+		return {
+			index: gotoIndex,
+			modified: false
+		};
 	}else{
-		return closure(newSet);
+		// Create new state
+		var newState = {
+			items: [newItem],
+			gotos: {}
+		};
+		return {
+			index: states.push(closure(newState)) - 1,
+			modified: true
+		};
 	}
 }
 for(var modified = true; modified; ){
@@ -160,34 +177,15 @@ for(var modified = true; modified; ){
 		state.items.forEach((item) => {
 			if(item.index < item.elements.length){
 				var symbol = item.elements[item.index];
-				var gotoState = goto(state, symbol);
-				var gotoIndex = states.findIndex((findState) => {
-					if(findState.items.length != gotoState.items.length){
-						return false;
-					}
-					for(var i = 0; i < findState.items.length; ++i){
-						if(!itemCompare(findState.items[i], gotoState.items[i])){
-							return false;
-						}else{
-							var assigned = Object.assign(findState.items[i].lookahead, gotoState.items[i].lookahead);
-							if(Object.keys(findState.items[i].lookahead).length != Object.keys(assigned).length){
-								return false;
-							}
-						}
-					}
-					return true;
-				});
-				if(gotoState != null){
-					if(gotoIndex == -1){
-						states.push(gotoState);
-						state.gotos[symbol] = states.length - 1;
-						modified = true;
-					}else{
-						state.gotos[symbol] = gotoIndex;
-					}
-				}
+				var gotoResult = gotoGet(item, symbol);
+				state.gotos[symbol] = gotoResult.index;
+				modified = gotoResult.modified;
 			}
 		});
 	}
 }
-fs.writeFile('out.txt', JSON.stringify(states, null, '\t'), () => {});
+
+// Output states
+if(process.env.OUTPUTSTATES == "true"){
+	fs.writeFile('states.json', JSON.stringify(states, null, '\t'), () => {});
+}
