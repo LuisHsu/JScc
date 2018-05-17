@@ -13,7 +13,7 @@
 //    limitations under the License.
 
 const fs = require('fs');
-const rule = require('./testRule');
+const rule = require('./rule');
 // Get start
 var ruleStart = rule.start;
 delete rule.start;
@@ -186,6 +186,41 @@ for(var modified = true; modified; ){
 }
 
 // Output states
-if(process.env.OUTPUTSTATES == "true"){
+if(process.env.STATE_JSON == "true"){
 	fs.writeFile('states.json', JSON.stringify(states, null, '\t'), () => {});
+}
+if(process.env.STATE_GRAPHVIZ == "true"){
+	var fout = fs.createWriteStream('states.dot');
+	fout.write("digraph states {\n\tnode [shape=plaintext];\n\trankdir=\"LR\";\n\tgraph [splines=true];\n");
+	states.forEach((state, index) => {
+		fout.write(`\t/** State ${index} **/\n`);
+		fout.write(`\tS${index} [label=<<TABLE BORDER="1" CELLBORDER="0">\n\t\t\t<TR><TD>S<SUB>${index}</SUB></TD></TR>\n`);
+		state.items.forEach((item) => {
+			fout.write(`\t\t\t<TR><TD ALIGN="LEFT">${item.nonterm}&rarr;`);
+			item.elements.forEach((elem, id) =>{
+				if(id == item.index){
+					fout.write(" &oplus;");
+				}
+				fout.write(` ${elem}`);
+			});
+			if(item.index == item.elements.length){
+				fout.write(" &oplus;");
+			}
+			fout.write(" | ");
+			var lookahead = Object.keys(item.lookahead);
+			lookahead.forEach((look, id) => {
+				fout.write("\'"+look+"\'");
+				if(id != lookahead.length - 1){
+					fout.write(" / ");
+				}
+			});
+			fout.write("</TD></TR>\n");
+		});
+		fout.write("\t\t</TABLE>>]\n");
+		var gotos = Object.keys(state.gotos);
+		gotos.forEach((key) => {
+			fout.write(`\tS${index} -> S${state.gotos[key]} [label="${key}"]\n`);
+		});
+	});
+	fout.end("}");
 }
