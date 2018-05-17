@@ -1,8 +1,6 @@
 
 module.exports = {
-	start: [
-		["translation_unit", "EOF"]
-	],
+	start: "translation_unit",
 	primary_expression: [
 		["identifier"],
 		["floating"],
