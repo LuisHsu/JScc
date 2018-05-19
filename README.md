@@ -28,6 +28,6 @@ A C compiler for [WasmVM](https://github.com/LuisHsu/WasmVM) with Node.js
 
 2. 執行 Run
 
-> node pp.js 輸入檔名 輸出檔名
+> node jspp.js 輸入檔名 輸出檔名
 
-> node pp.js INPUTFILE OUTPUTFILE
+> node jspp.js INPUTFILE OUTPUTFILE
