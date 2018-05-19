@@ -217,14 +217,14 @@ if(process.env.STATE_GRAPHVIZ == "true"){
 			if(item.index == item.elements.length){
 				fout.write(" &oplus;");
 			}
-			/*fout.write(" | ");
+			fout.write(" | ");
 			var lookahead = Object.keys(item.lookahead);
 			lookahead.forEach((look, id) => {
-				fout.write("\'"+sanity(look)+"\'");
+				fout.write("\'"+look+"\'");
 				if(id != lookahead.length - 1){
 					fout.write(" / ");
 				}
-			});*/
+			});
 			fout.write("</TD></TR>\n");
 		});
 		fout.write("\t\t</TABLE>>]\n");
