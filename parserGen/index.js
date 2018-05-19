@@ -66,7 +66,7 @@ for(var modified = true; modified; ){
 	});
 }
 
-// LR(1) Autometa
+// LALR Automata
 var states = [closure({
 	items: [{
 		nonterm: 'start',
@@ -115,7 +115,7 @@ function closure(itemSet){
 						lookahead[first] = first;
 					});
 				}else{
-					lookahead = item.lookahead;
+					lookahead = Object.assign(lookahead, item.lookahead);
 				}
 				production.forEach((subrule) => {
 					var newItem = {
@@ -185,41 +185,52 @@ for(var modified = true; modified; ){
 	}
 }
 
+// Parsing table
+
 // Output states
 if(process.env.STATE_JSON == "true"){
 	fs.writeFile('states.json', JSON.stringify(states, null, '\t'), () => {});
 }
 if(process.env.STATE_GRAPHVIZ == "true"){
+
+	function sanity(str){
+		if(typeof str == "string"){
+			return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/\'/g, "&#39;");
+		}else{
+			return str;
+		}
+	}
+
 	var fout = fs.createWriteStream('states.dot');
 	fout.write("digraph states {\n\tnode [shape=plaintext];\n\trankdir=\"LR\";\n\tgraph [splines=true];\n");
 	states.forEach((state, index) => {
 		fout.write(`\t/** State ${index} **/\n`);
 		fout.write(`\tS${index} [label=<<TABLE BORDER="1" CELLBORDER="0">\n\t\t\t<TR><TD>S<SUB>${index}</SUB></TD></TR>\n`);
 		state.items.forEach((item) => {
-			fout.write(`\t\t\t<TR><TD ALIGN="LEFT">${item.nonterm}&rarr;`);
+			fout.write(`\t\t\t<TR><TD ALIGN="LEFT">${sanity(item.nonterm)} &rarr;`);
 			item.elements.forEach((elem, id) =>{
 				if(id == item.index){
 					fout.write(" &oplus;");
 				}
-				fout.write(` ${elem}`);
+				fout.write(` ${sanity(elem)}`);
 			});
 			if(item.index == item.elements.length){
 				fout.write(" &oplus;");
 			}
-			fout.write(" | ");
+			/*fout.write(" | ");
 			var lookahead = Object.keys(item.lookahead);
 			lookahead.forEach((look, id) => {
-				fout.write("\'"+look+"\'");
+				fout.write("\'"+sanity(look)+"\'");
 				if(id != lookahead.length - 1){
 					fout.write(" / ");
 				}
-			});
+			});*/
 			fout.write("</TD></TR>\n");
 		});
 		fout.write("\t\t</TABLE>>]\n");
 		var gotos = Object.keys(state.gotos);
 		gotos.forEach((key) => {
-			fout.write(`\tS${index} -> S${state.gotos[key]} [label="${key}"]\n`);
+			fout.write(`\tS${index} -> S${state.gotos[key]} [label="${sanity(key)}"]\n`);
 		});
 	});
 	fout.end("}");

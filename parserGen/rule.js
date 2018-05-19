@@ -24,7 +24,7 @@ module.exports = {
 	postfix_expression: [
 		["primary_expression"],
 		["postfix_expression", "[", "expression", "]"],
-		["postfix_expression", "(", "argument_expression_list\t", "]"],
+		["postfix_expression", "(", "argument_expression_list\t", ")"],
 		["postfix_expression", ".", "identifier"],
 		["postfix_expression", "->", "identifier"],
 		["postfix_expression", "++"],
@@ -190,7 +190,7 @@ module.exports = {
 		["struct_declaration_list", "struct_declaration"]
 	],
 	struct_declaration: [
-		["specifier_qualifier_list", "struct_declaration_list\t", ";"],
+		["specifier_qualifier_list", "struct_declarator_list\t", ";"],
 		["static_assert_declaration"]
 	],
 	specifier_qualifier_list: [
