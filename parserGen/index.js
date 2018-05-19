@@ -185,7 +185,95 @@ for(var modified = true; modified; ){
 	}
 }
 
-// Parsing table
+// Generate parsing table module & reduce function module template
+
+var reduceFuncs = {};
+var tableOut = fs.createWriteStream('table.js');
+tableOut.write("const reduceFuncs = require('./reduceFuncs');\n");
+tableOut.write("module.exports = [\n");
+states.forEach((state, index) => {
+	if(index != 0){
+		tableOut.write(",\n");
+	}
+	tableOut.write("\t{\n");
+	var checkObj = {};
+	var first = true;
+	Object.keys(state.gotos).forEach((gotoKey) => {
+		if(first){
+			first = false;
+		}else{
+			tableOut.write(",\n");
+		}
+		tableOut.write(`\t\t"${gotoKey}": ${state.gotos[gotoKey]}`);
+		if(checkObj[gotoKey]){
+			console.log(`State ${index} has conflict with ${gotoKey} !`);
+		}else{
+			checkObj[gotoKey] = true;
+		}
+	});
+	state.items.forEach((item) => {
+		if(item.index >= item.elements.length){
+			var funcName = `reduceFuncs.${item.nonterm}`;
+			if(item.nonterm != "start"){
+				var subIndex = rule[item.nonterm].findIndex((subrule) => {
+					if(subrule.length != item.elements.length){
+						return false;
+					}
+					for(var i = 0; i < subrule.length; ++i){
+						if(subrule[i] != item.elements[i]){
+							return false;
+						}
+					}
+					return true;
+				});
+				funcName += `_${subIndex}`;
+			}else{
+				funcName += `_0`;
+			}
+			Object.keys(item.lookahead).forEach((lookKey) => {
+				if(first){
+					first = false;
+				}else{
+					tableOut.write(",\n");
+				}
+				tableOut.write(`\t\t"${lookKey}": ${funcName}`);
+				reduceFuncs[funcName.replace("reduceFuncs.", "")] = null;
+				if(checkObj[lookKey]){
+					console.log(`State ${index} has conflict with ${lookKey} !`);
+				}else{
+					checkObj[lookKey] = true;
+				}
+			});
+		}
+	});
+	tableOut.write("\n\t}");
+});
+tableOut.end("\n];\n");
+
+var reduceOut = fs.createWriteStream('reduceFuncs.js');
+reduceOut.write("module.exports = {\n");
+var reduceKeyArray = Object.keys(reduceFuncs).sort((a, b) => {
+	var aMatched = a.match(/_(\d+)$/);
+	var bMatched = b.match(/_(\d+)$/);
+	var cmp = a.replace(aMatched[0], "").localeCompare(b.replace(bMatched[0], ""));
+	if(cmp == 0){
+		return parseInt(aMatched[1]) - parseInt(bMatched[1]);
+	}else{
+		return cmp;
+	}
+});
+for(var i = 0; i < reduceKeyArray.length; ++i){
+	if(i != 0){
+		reduceOut.write(",\n");
+	}
+	reduceOut.write(`\t"${reduceKeyArray[i]}": null`);
+}
+reduceOut.end("\n};\n");
+
+// Output expanded rules
+if(process.env.NO_RULE_JSON != "true"){
+	fs.writeFile('rule.json', JSON.stringify(rule, null, '\t').replace(/\[\s+"/g, "[\"").replace(/,\n\t\t+"/g, ",\"").replace(/"\n\s*\]/g, "\"]"), () => {});
+}
 
 // Output states
 if(process.env.STATE_JSON == "true"){
