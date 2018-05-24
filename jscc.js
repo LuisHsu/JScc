@@ -16,7 +16,6 @@ const fs = require('fs');
 const pp = require('./pp');
 const lexer = require('./lex');
 const parser = require('./parser');
-
 const fin = fs.createReadStream(process.argv[2]);
 const fout = fs.createWriteStream(process.argv[3]);
 

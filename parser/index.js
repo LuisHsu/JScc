@@ -12,18 +12,18 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-const { Transform } = require('stream');
+const { Duplex } = require('stream');
+const parseTable = require('./table');
+const ParseError = require('./error');
 
-class Parser extends Transform {
+class Parser extends Duplex {
 	constructor(option) {
 		super(option);
 		this.clean();
-		this.emitter = new EventEmitter();
-		this.emitter.on('parse', this._parse.bind(this));
 		this.on('finish', this._unpipe);
 	}
 	clean() {
-		this.ast = null;
+		this.genModule = null;
 		this.tokens = [];
 		this.dataStr = "";
 	}
@@ -52,13 +52,13 @@ class Parser extends Transform {
 	}
 	_read(){
 		try{
-			if (this.ast) {
-				this.push(JSON.stringify(this.ast));
-			} else {
-				this.on('parsed', (() => {
-					this.push(JSON.stringify(this.ast));
-				}).bind(this));
-			}
+			var timer = setInterval((() => {
+				if(this.genModule){
+					clearInterval(timer);
+					this.push(JSON.stringify(this.genModule));
+					this.emit('end');
+				}
+			}).bind(this), 1);
 		}catch(err){
 			this.emit('error', err);
 		}
@@ -70,11 +70,48 @@ class Parser extends Transform {
 				this.tokens.push(JSON.parse(tokenStr));
 			}
 		}
-		this.emitter.emit('parse', this.tokens);
+		// Push EOF
+		this.tokens.push({
+			type: "EOF"
+		});
+		this._parse();
 	}
 	_parse() {
-		this.ast = this.tokens;// FIXME: Test
-		this.emitter.emit('parsed');
+		// Define the context
+		var context = {
+			stack: [],
+			states: [0],
+			result: null
+		};
+		// Parse
+		try{
+			while(context.result == null){
+				// Get input token
+				var input = this.tokens[0];
+				var action = parseTable[context.states[0]][getStateKey(input)];
+				if(Number.isInteger(action)){
+					context.stack.push(input);
+					this.tokens.shift();
+					context.states.unshift(action);
+				}else if(typeof action === 'function'){
+					var reducedNode = action(context); // Stack and states should be popped inside action
+					context.stack.push(reducedNode);
+					context.states.unshift(parseTable[context.states[0]][getStateKey(reducedNode)]);
+				}else{
+					throw ParseError(context, input);
+				}
+			}
+		}catch(err){
+			this.emit('error', err);
+		}
 	}
 }
 module.exports = new Parser();
+
+function getStateKey(token){
+	if(token.type == "keyword" || token.type == "punctuator"){
+		return token.value;
+	}else{
+		return token.type;
+	}
+}
