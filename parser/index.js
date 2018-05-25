@@ -81,13 +81,21 @@ class Parser extends Duplex {
 		var context = {
 			stack: [],
 			states: [0],
-			result: null
+			result: null,
+			typedef: {}
 		};
 		// Parse
 		try{
 			while(context.result == null){
 				// Get input token
 				var input = this.tokens[0];
+				// Deal with typedef_name
+				if(input.type == "identifier"){
+					if(context.typedef[input.value]){
+						input.type = "typedef_name";
+					}
+				}
+				// Get action
 				var action = parseTable[context.states[0]][getStateKey(input)];
 				if(Number.isInteger(action)){
 					context.stack.push(input);
@@ -108,10 +116,10 @@ class Parser extends Duplex {
 }
 module.exports = new Parser();
 
-function getStateKey(token){
-	if(token.type == "keyword" || token.type == "punctuator"){
-		return token.value;
+function getStateKey(node){
+	if(node.type == "keyword" || node.type == "punctuator"){
+		return node.value;
 	}else{
-		return token.type;
+		return node.type;
 	}
 }

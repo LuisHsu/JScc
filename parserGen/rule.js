@@ -138,11 +138,11 @@ module.exports = {
 		["static_assert_declaration"]
 	],
 	declaration_specifiers: [
-		["storage_class_specifier", "declaration_specifiers"],
-		["type_specifier", "declaration_specifiers"],
-		["type_qualifier", "declaration_specifiers"],
-		["function_specifier", "declaration_specifiers"],
-		["alignment_specifier", "declaration_specifiers"]
+		["storage_class_specifier", "declaration_specifiers\t"],
+		["type_specifier", "declaration_specifiers\t"],
+		["type_qualifier", "declaration_specifiers\t"],
+		["function_specifier", "declaration_specifiers\t"],
+		["alignment_specifier", "declaration_specifiers\t"]
 	],
 	init_declarator_list: [
 		["init_declarator"],
@@ -286,9 +286,6 @@ module.exports = {
 		["direct_abstract_declarator\t", "[", "type_qualifier_list", "static", "assignment_expression", "]"],
 		["direct_abstract_declarator\t", "[", "*", "]"],
 		["direct_abstract_declarator\t", "(", "parameter_type_list\t", ")"]
-	],
-	typedef_name: [
-		["identifier"]
 	],
 	initializer: [
 		["assignment_expression"],

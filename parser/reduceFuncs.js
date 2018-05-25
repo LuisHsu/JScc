@@ -1,3 +1,4 @@
+const declarations = require('./declarations');
 module.exports = {
 	"abstract_declarator_0": null,
 	"abstract_declarator_1": null,
@@ -46,6 +47,11 @@ module.exports = {
 	"declaration_specifiers_2": null,
 	"declaration_specifiers_3": null,
 	"declaration_specifiers_4": null,
+	"declaration_specifiers_5": null,
+	"declaration_specifiers_6": declarations.declaration_specifiers_6,
+	"declaration_specifiers_7": null,
+	"declaration_specifiers_8": null,
+	"declaration_specifiers_9": null,
 	"declarator_0": null,
 	"declarator_1": null,
 	"designation_0": null,
@@ -247,7 +253,7 @@ module.exports = {
 	"type_specifier_0": null,
 	"type_specifier_1": null,
 	"type_specifier_2": null,
-	"type_specifier_3": null,
+	"type_specifier_3": declarations.type_specifier_3,
 	"type_specifier_4": null,
 	"type_specifier_5": null,
 	"type_specifier_6": null,
@@ -259,7 +265,6 @@ module.exports = {
 	"type_specifier_12": null,
 	"type_specifier_13": null,
 	"type_specifier_14": null,
-	"typedef_name_0": null,
 	"unary_expression_0": null,
 	"unary_expression_1": null,
 	"unary_expression_2": null,
