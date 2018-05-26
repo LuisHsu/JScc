@@ -20,7 +20,6 @@ class Parser extends Duplex {
 		super(option);
 		this.clean();
 		this.on('finish', this._unpipe);
-		this.parse = Parse();
 	}
 	clean() {
 		this.genModule = null;
@@ -71,7 +70,7 @@ class Parser extends Duplex {
 			}
 		}
 		// Parse
-		this.genModule = this.parse.run(this.tokens);
+		this.genModule = Parse(this.tokens).run();
 	}
 }
 module.exports = new Parser();
