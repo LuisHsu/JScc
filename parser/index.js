@@ -13,7 +13,7 @@
 //    limitations under the License.
 
 const { Duplex } = require('stream');
-const Parse = require('./parse');
+const ExtDefs = require('./extDefs');
 
 class Parser extends Duplex {
 	constructor(option) {
@@ -70,7 +70,10 @@ class Parser extends Duplex {
 			}
 		}
 		// Parse
-		this.genModule = Parse(this.tokens).run();
+		var context = {
+			typedefs: []
+		};
+		this.genModule = ExtDefs.translation_unit(context, this.tokens);
 	}
 }
 module.exports = new Parser();
