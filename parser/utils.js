@@ -1,9 +1,9 @@
 module.exports = {
 	getToken: (expect, tokens) => {
-		if(tokens[0].type == 'keyword' || tokens[0].type == 'punctuator'){
-			return tokens[0].value == expect ? tokens.shift() : null;
+		if(tokens[tokens.cursor].type == 'keyword' || tokens[tokens.cursor].type == 'punctuator'){
+			return tokens[tokens.cursor].value == expect ? tokens[tokens.cursor++] : null;
 		}else{
-			return tokens[0].type == expect ? tokens.shift() : null;
+			return tokens[tokens.cursor].type == expect ? tokens[tokens.cursor++] : null;
 		}
 	}
 };

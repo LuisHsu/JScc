@@ -73,6 +73,7 @@ class Parser extends Duplex {
 		var context = {
 			typedefs: []
 		};
+		this.tokens.cursor = 0;
 		this.genModule = ExtDefs.translation_unit(context, this.tokens);
 	}
 }
