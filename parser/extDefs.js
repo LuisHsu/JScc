@@ -8,7 +8,8 @@ function translation_unit(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [translation_unit(context, tokens), external_declaration(context, tokens)];
+	exprs = [translation_unit(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? external_declaration(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -31,11 +32,10 @@ function external_declaration(context, tokens){
 
 function function_definition(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [decl.declaration_specifiers(context, tokens),
-		decl.declarator(context, tokens),
-		declaration_list(context, tokens),
-		stmt.compound_statement(context, tokens)
-	];
+	var exprs = [decl.declaration_specifiers(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? decl.declarator(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declaration_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? stmt.compound_statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}

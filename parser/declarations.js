@@ -40,10 +40,9 @@ module.exports = {
 
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [declaration_specifiers(context, tokens),
-		init_declarator_list(context, tokens),
-		getToken(";", tokens)
-	];
+	var exprs = [declaration_specifiers(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? init_declarator_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -91,14 +90,13 @@ function storage_class_specifier(context, tokens){
 
 function static_assert_declaration(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("_Static_assert", tokens),
-		getToken("(", tokens),
-		expressions.constant_expression(context, tokens),
-		getToken(",", tokens),
-		getToken("string", tokens),
-		getToken(")", tokens),
-		getToken(";", tokens)
-	];
+	var exprs = [getToken("_Static_assert", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("string", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
 		// TODO:
 	}
@@ -186,11 +184,10 @@ function type_specifier(context, tokens){
 
 function atomic_type_specifier(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("_Atomic", tokens),
-		getToken("(", tokens),
-		type_name(context, tokens),
-		getToken(")", tokens)
-	];
+	var exprs = [getToken("_Atomic", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
@@ -199,7 +196,8 @@ function atomic_type_specifier(context, tokens){
 
 function type_name(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [specifier_qualifier_list(context, tokens), abstract_declarator(context, tokens)];
+	var exprs = [specifier_qualifier_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -208,19 +206,17 @@ function type_name(context, tokens){
 
 function struct_or_union_specifier(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [struct_or_union(context, tokens),
-		getToken("identifier", tokens),
-		getToken("{", tokens),
-		struct_declaration_list(context, tokens),
-		getToken("}", tokens)
-	];
+	var exprs = [struct_or_union(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? struct_declaration_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [struct_or_union(context, tokens),
-		getToken("identifier", tokens)
-	];
+	exprs = [struct_or_union(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -234,7 +230,8 @@ function struct_declaration_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [struct_declaration_list(context, tokens), struct_declaration(context, tokens)];
+	exprs = [struct_declaration_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? struct_declaration(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -243,12 +240,14 @@ function struct_declaration_list(context, tokens){
 
 function specifier_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [type_specifier(context, tokens), specifier_qualifier_list(context, tokens)];
+	var exprs = [type_specifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [type_qualifier(context, tokens), specifier_qualifier_list(context, tokens)];
+	exprs = [type_qualifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -257,10 +256,9 @@ function specifier_qualifier_list(context, tokens){
 
 function struct_declaration(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [specifier_qualifier_list(context, tokens),
-		struct_declarator_list(context, tokens),
-		getToken(";", tokens)
-	];
+	var exprs = [specifier_qualifier_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? struct_declarator_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -279,10 +277,9 @@ function struct_declarator_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [struct_declaration_list(context, tokens),
-		getToken(",", tokens),
-		struct_declarator(context, tokens)
-	];
+	exprs = [struct_declaration_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? struct_declarator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -296,10 +293,9 @@ function struct_declarator(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [declarator(context, tokens),
-		getToken(":", tokens),
-		expressions.constant_expression(context, tokens)
-	];
+	exprs = [declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(":", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	if(exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -322,28 +318,27 @@ function struct_or_union(context, tokens){
 
 function enum_specifier(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("enum", tokens),
-		getToken("identifier", tokens),
-		getToken("{", tokens),
-		enumerator_list(context, tokens),
-		getToken("}", tokens)
-	];
+	var exprs = [getToken("enum", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? enumerator_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("enum", tokens),
-		getToken("identifier", tokens),
-		getToken("{", tokens),
-		enumerator_list(context, tokens),
-		getToken(",", tokens),
-		getToken("}", tokens)
-	];
+	exprs = [getToken("enum", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? enumerator_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("enum", tokens), getToken("identifier", tokens)];
+	exprs = [getToken("enum", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -357,7 +352,9 @@ function enumerator_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [enumerator_list(context, tokens), getToken(",", tokens), enumerator(context, tokens)];
+	exprs = [enumerator_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? enumerator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -371,7 +368,9 @@ function enumerator(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("identifier", tokens), getToken("=", tokens), expressions.constant_expression(context, tokens)];
+	exprs = [getToken("identifier", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("=", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -426,20 +425,18 @@ function function_specifier(context, tokens){
 
 function alignment_specifier(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("_Alignas", tokens),
-		getToken("(", tokens),
-		type_name(context, tokens),
-		getToken(")", tokens)
-	];
+	var exprs = [getToken("_Alignas", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("_Alignas", tokens),
-		getToken("(", tokens),
-		expressions.constant_expression(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [getToken("_Alignas", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -447,27 +444,32 @@ function alignment_specifier(context, tokens){
 
 function declaration_specifiers(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [storage_class_specifier(context, tokens), declaration_specifiers(context, tokens)];
+	var exprs = [storage_class_specifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [type_specifier(context, tokens), declaration_specifiers(context, tokens)];
+	exprs = [type_specifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [type_qualifier(context, tokens), declaration_specifiers(context, tokens)];
+	exprs = [type_qualifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [function_specifier(context, tokens), declaration_specifiers(context, tokens)];
+	exprs = [function_specifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [alignment_specifier(context, tokens), declaration_specifiers(context, tokens)];
+	exprs = [alignment_specifier(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -481,19 +483,17 @@ function initializer(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("{", tokens),
-		initializer_list(context, tokens),
-		getToken("}", tokens)
-	];
+	exprs = [getToken("{", tokens)];
+	exprs.push(exprs[exprs.length-1] ? initializer_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("{", tokens),
-		initializer_list(context, tokens),
-		getToken(",", tokens),
-		getToken("}", tokens)
-	];
+	exprs = [getToken("{", tokens)];
+	exprs.push(exprs[exprs.length-1] ? initializer_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -502,16 +502,16 @@ function initializer(context, tokens){
 
 function initializer_list(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [designation(context, tokens), initializer(context, tokens)];
+	var exprs = [designation(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? initializer(context, tokens) : null);
 	if(exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [initializer_list(context, tokens),
-		getToken(",", tokens),
-		designation(context, tokens),
-		initializer(context, tokens)
-	];
+	exprs = [initializer_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? designation(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? initializer(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -520,7 +520,8 @@ function initializer_list(context, tokens){
 
 function designation(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [designator_list(context, tokens), getToken("=", tokens)];
+	var exprs = [designator_list(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("=", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -534,9 +535,8 @@ function designator_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [designator_list(context, tokens),
-		designator(context, tokens)
-	];
+	exprs = [designator_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? designator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -545,17 +545,15 @@ function designator_list(context, tokens){
 
 function designator(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("[", tokens),
-		expressions.constant_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	var exprs = [getToken("[", tokens)];
+	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken(".", tokens),
-		getToken("identifier", tokens)
-	];
+	exprs = [getToken(".", tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -564,7 +562,8 @@ function designator(context, tokens){
 
 function declarator(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [pointer(context, tokens), direct_declarator(context, tokens)];
+	var exprs = [pointer(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? direct_declarator(context, tokens) : null);
 	if(exprs[1] != null){
 		// TODO:
 	}
@@ -578,70 +577,63 @@ function direct_declarator(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("(", tokens),
-		declarator(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length-1] ? declarator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("[", tokens),
-		type_qualifier_list(context, tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("[", tokens),
-		getToken("static", tokens),
-		type_qualifier_list(context, tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("[", tokens),
-		type_qualifier_list(context, tokens),
-		getToken("static", tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("[", tokens),
-		type_qualifier_list(context, tokens),
-		getToken("*", tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("*", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("(", tokens),
-		parameter_type_list(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_type_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens),
-		getToken("(", tokens),
-		identifier_list(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [direct_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? identifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -655,10 +647,9 @@ function parameter_type_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [parameter_list(context, tokens),
-		getToken(",", tokens),
-		getToken("...", tokens)
-	];
+	exprs = [parameter_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("...", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -672,10 +663,9 @@ function parameter_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [parameter_list(context, tokens),
-		getToken(",", tokens),
-		parameter_declaration(context, tokens)
-	];
+	exprs = [parameter_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_declaration(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -684,12 +674,14 @@ function parameter_list(context, tokens){
 
 function parameter_declaration(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [declaration_specifiers(context, tokens), declarator(context, tokens)];
+	var exprs = [declaration_specifiers(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? declarator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [declaration_specifiers(context, tokens), abstract_declarator(context, tokens)];
+	exprs = [declaration_specifiers(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -703,7 +695,8 @@ function abstract_declarator(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [pointer(context, tokens), direct_abstract_declarator(context, tokens)];
+	exprs = [pointer(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator(context, tokens) : null);
 	if(exprs[1] != null){
 		// TODO:
 	}
@@ -712,60 +705,54 @@ function abstract_declarator(context, tokens){
 
 function direct_abstract_declarator(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("(", tokens),
-		abstract_declarator(context, tokens),
-		getToken(")", tokens)
-	];
+	var exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens),
-		getToken("[", tokens),
-		type_qualifier_list(context, tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_abstract_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[1] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens),
-		getToken("[", tokens),
-		getToken("static", tokens),
-		type_qualifier_list(context, tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_abstract_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[1] != null && exprs[2] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens),
-		getToken("[", tokens),
-		type_qualifier_list(context, tokens),
-		getToken("static", tokens),
-		expressions.assignment_expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_abstract_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens),
-		getToken("[", tokens),
-		getToken("*", tokens),
-		getToken("]", tokens)
-	];
+	exprs = [direct_abstract_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("*", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens),
-		getToken("(", tokens),
-		parameter_type_list(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [direct_abstract_declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_type_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -779,10 +766,9 @@ function identifier_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [identifier_list(context, tokens),
-		getToken(",", tokens),
-		getToken("...", tokens)
-	];
+	exprs = [identifier_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("...", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -796,9 +782,8 @@ function type_qualifier_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [type_qualifier_list(context, tokens),
-		type_qualifier(context, tokens)
-	];
+	exprs = [type_qualifier_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? type_qualifier(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -807,17 +792,15 @@ function type_qualifier_list(context, tokens){
 
 function pointer(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("*", tokens),
-		type_qualifier_list(context, tokens)
-	];
+	var exprs = [getToken("*", tokens)];
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("*", tokens),
-		type_qualifier_list(context, tokens),
-		pointer(context, tokens)
-	];
+	exprs = [getToken("*", tokens)];
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? pointer(context, tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -831,7 +814,9 @@ function init_declarator(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [declarator(context, tokens), getToken("=", tokens), init(context, tokens)];
+	exprs = [declarator(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken("=", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? init(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -845,7 +830,9 @@ function init_declarator_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [init_declarator_list(context, tokens), getToken(",", tokens), init_declarator(context, tokens)];
+	exprs = [init_declarator_list(context, tokens)];
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? init_declarator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}

@@ -50,10 +50,9 @@ function statement(context, tokens){
 
 function labeled_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("identifier", tokens),
-		getToken(":", tokens),
-		statement(context, tokens)
-	];
+	var exprs = [getToken("identifier", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -87,10 +86,9 @@ function labeled_statement(context, tokens){
 
 function compound_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("{", tokens),
-		block_item_list(context, tokens),
-		getToken("}", tokens)
-	];
+	var exprs = [getToken("{", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? block_item_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -104,9 +102,8 @@ function block_item_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [block_item_list(context, tokens),
-		block_item(context, tokens)
-	];
+	exprs = [block_item_list(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? block_item(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
@@ -129,9 +126,8 @@ function block_item(context, tokens){
 
 function expression_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [expressions.expression(context, tokens),
-		getToken(";", tokens)
-	];
+	var exprs = [expressions.expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[1] != null){
 		// TODO:
 	}
@@ -140,34 +136,31 @@ function expression_statement(context, tokens){
 
 function selection_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("if", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens),
-		getToken("else", tokens),
-		statement(context, tokens)
-	];
+	var exprs = [getToken("if", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("else", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("if", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens)
-	];
+	exprs = [getToken("if", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4]){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("switch", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens)
-	];
+	exprs = [getToken("switch", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4]){
 		// TODO:
 	}
@@ -176,51 +169,47 @@ function selection_statement(context, tokens){
 
 function iteration_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("while", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens)
-	];
+	var exprs = [getToken("while", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("do", tokens),
-		statement(context, tokens),
-		getToken("while", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		getToken(";", tokens)
-	];
+	exprs = [getToken("do", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("while", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("for", tokens),
-		getToken("(", tokens),
-		expressions.expression(context, tokens),
-		getToken(";", tokens),
-		expressions.expression(context, tokens),
-		getToken(";", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens)
-	];
+	exprs = [getToken("for", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null && exprs[5] != null && exprs[7] != null && exprs[8] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("for", tokens),
-		getToken("(", tokens),
-		declarations.declaration(context, tokens),
-		expressions.expression(context, tokens),
-		getToken(";", tokens),
-		expressions.expression(context, tokens),
-		getToken(")", tokens),
-		statement(context, tokens)
-	];
+	exprs = [getToken("for", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declarations.declaration(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[4] != null && exprs[6] != null && exprs[7] != null){
 		// TODO:
 	}
@@ -229,32 +218,28 @@ function iteration_statement(context, tokens){
 
 function jump_statement(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("goto", tokens),
-		getToken("identifier", tokens),
-		getToken(";", tokens)
-	];
+	var exprs = [getToken("goto", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2]){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("continue", tokens),
-		getToken(";", tokens)
-	];
+	exprs = [getToken("continue", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("break", tokens),
-		getToken(";", tokens)
-	];
+	exprs = [getToken("break", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("return", tokens),
-		expressions.expression(context, tokens),
-		getToken(";", tokens)
-	];
+	exprs = [getToken("return", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? expressions.expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		// TODO:
 	}

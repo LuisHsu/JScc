@@ -55,10 +55,9 @@ function primary_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("(", tokens),
-		expression(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null){
 		// TODO:
 	}
@@ -72,13 +71,12 @@ function primary_expression(context, tokens){
 
 function generic_selection(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [getToken("_Generic", tokens),
-		getToken("(", tokens),
-		assignment_expression(context, tokens),
-		getToken(",", tokens),
-		generic_assoc_list(context, tokens),
-		getToken(")", tokens)
-	];
+	var exprs = [getToken("_Generic", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? generic_assoc_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
@@ -92,10 +90,9 @@ function generic_assoc_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [generic_assoc_list(context, tokens),
-		getToken(",", tokens),
-		generic_association(context, tokens)
-	];
+	exprs = [generic_assoc_list(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? generic_association(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -104,18 +101,16 @@ function generic_assoc_list(context, tokens){
 
 function generic_association(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [declarations.type_name(context, tokens),
-		getToken(":", tokens),
-		assignment_expression(context, tokens)
-	];
+	var exprs = [declarations.type_name(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("default", tokens),
-		getToken(":", tokens),
-		assignment_expression(context, tokens)
-	];
+	exprs = [getToken("default", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -129,73 +124,65 @@ function postfix_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken("[", tokens),
-		expression(context, tokens),
-		getToken("]", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("[", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken("(", tokens),
-		argument_expression_list(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? argument_expression_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken(".", tokens),
-		getToken("identifier", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(".", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken("->", tokens),
-		getToken("identifier", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("->", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken("++", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("++", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens),
-		getToken("--", tokens)
-	];
+	exprs = [postfix_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("--", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("(", tokens),
-		declarations.type_name(context, tokens),
-		getToken(")", tokens),
-		getToken("{", tokens),
-		declarations.initializer_list(context, tokens),
-		getToken("}", tokens)
-	];
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declarations.initializer_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("(", tokens),
-		declarations.type_name(context, tokens),
-		getToken(")", tokens),
-		getToken("{", tokens),
-		declarations.initializer_list(context, tokens),
-		getToken(",", tokens),
-		getToken("}", tokens)
-	];
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declarations.initializer_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
 		// TODO:
 	}
@@ -209,10 +196,9 @@ function argument_expression_list(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [argument_expression_list(context, tokens),
-		getToken(",", tokens),
-		assignment_expression(context, tokens)
-	];
+	exprs = [argument_expression_list(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -226,48 +212,42 @@ function unary_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("++", tokens),
-		unary_expression(context, tokens)
-	];
+	exprs = [getToken("++", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("--", tokens),
-		unary_expression(context, tokens)
-	];
+	exprs = [getToken("--", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [unary_operator(context, tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [unary_operator(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("sizeof", tokens),
-		unary_expression(context, tokens)
-	];
+	exprs = [getToken("sizeof", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("sizeof", tokens),
-		getToken("(", tokens),
-		declarations.type_name(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [getToken("sizeof", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("_Alignof", tokens),
-		getToken("(", tokens),
-		declarations.type_name(context, tokens),
-		getToken(")", tokens)
-	];
+	exprs = [getToken("_Alignof", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -315,11 +295,10 @@ function cast_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [getToken("(", tokens),
-		declarations.type_name(context, tokens),
-		getToken(")", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
 		// TODO:
 	}
@@ -333,26 +312,23 @@ function multiplicative_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("*", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("*", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("/", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("/", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("%", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("%", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -366,26 +342,23 @@ function multiplicative_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("*", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("*", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("/", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("/", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens),
-		getToken("%", tokens),
-		cast_expression(context, tokens)
-	];
+	exprs = [multiplicative_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("%", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -399,18 +372,16 @@ function additive_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [additive_expression(context, tokens),
-		getToken("+", tokens),
-		multiplicative_expression(context, tokens)
-	];
+	exprs = [additive_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("+", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [additive_expression(context, tokens),
-		getToken("-", tokens),
-		multiplicative_expression(context, tokens)
-	];
+	exprs = [additive_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("-", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -424,18 +395,16 @@ function shift_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [shift_expression(context, tokens),
-		getToken("<<", tokens),
-		additive_expression(context, tokens)
-	];
+	exprs = [shift_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("<<", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [shift_expression(context, tokens),
-		getToken(">>", tokens),
-		additive_expression(context, tokens)
-	];
+	exprs = [shift_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(">>", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -449,34 +418,30 @@ function relational_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens),
-		getToken("<", tokens),
-		shift_expression(context, tokens)
-	];
+	exprs = [relational_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("<", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens),
-		getToken(">", tokens),
-		shift_expression(context, tokens)
-	];
+	exprs = [relational_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(">", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens),
-		getToken("<=", tokens),
-		shift_expression(context, tokens)
-	];
+	exprs = [relational_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("<=", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens),
-		getToken(">=", tokens),
-		shift_expression(context, tokens)
-	];
+	exprs = [relational_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(">=", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -490,18 +455,16 @@ function equality_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [equality_expression(context, tokens),
-		getToken("==", tokens),
-		relational_expression(context, tokens)
-	];
+	exprs = [equality_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("==", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [equality_expression(context, tokens),
-		getToken("!=", tokens),
-		relational_expression(context, tokens)
-	];
+	exprs = [equality_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("!=", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -515,10 +478,9 @@ function AND_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [AND_expression(context, tokens),
-		getToken("&", tokens),
-		equality_expression(context, tokens)
-	];
+	exprs = [AND_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("&", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? equality_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -532,10 +494,9 @@ function exclusive_OR_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [exclusive_OR_expression(context, tokens),
-		getToken("^", tokens),
-		AND_expression(context, tokens)
-	];
+	exprs = [exclusive_OR_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("^", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? AND_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -549,10 +510,9 @@ function inclusive_OR_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [inclusive_OR_expression(context, tokens),
-		getToken("|", tokens),
-		exclusive_OR_expression(context, tokens)
-	];
+	exprs = [inclusive_OR_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("|", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? exclusive_OR_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -566,10 +526,9 @@ function logical_AND_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [logical_AND_expression(context, tokens),
-		getToken("&&", tokens),
-		inclusive_OR_expression(context, tokens)
-	];
+	exprs = [logical_AND_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("&&", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? inclusive_OR_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -583,10 +542,9 @@ function logical_OR_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [logical_OR_expression(context, tokens),
-		getToken("||", tokens),
-		logical_AND_expression(context, tokens)
-	];
+	exprs = [logical_OR_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("||", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? logical_AND_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -600,12 +558,11 @@ function conditional_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [logical_OR_expression(context, tokens),
-		getToken("?", tokens),
-		expression(context, tokens),
-		getToken(":", tokens),
-		conditional_expression(context, tokens)
-	];
+	exprs = [logical_OR_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("?", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? conditional_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		// TODO:
 	}
@@ -619,10 +576,9 @@ function assignment_expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [unary_expression(context, tokens),
-		assignment_operator(context, tokens),
-		assignment_expression(context, tokens)
-	];
+	exprs = [unary_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? assignment_operator(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
@@ -704,10 +660,9 @@ function expression(context, tokens){
 		// TODO:
 	}
 	tokens.cursor = cursor;
-	exprs = [expression(context, tokens),
-		getToken(",", tokens),
-		assignment_expression(context, tokens)
-	];
+	exprs = [expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		// TODO:
 	}
