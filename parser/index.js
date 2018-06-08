@@ -13,8 +13,7 @@
 //    limitations under the License.
 
 const { Duplex } = require('stream');
-const parseTable = require('./table');
-const ParseError = require('./error');
+const ExtDefs = require('./extDefs');
 
 class Parser extends Duplex {
 	constructor(option) {
@@ -55,7 +54,7 @@ class Parser extends Duplex {
 			var timer = setInterval((() => {
 				if(this.genModule){
 					clearInterval(timer);
-					this.push(JSON.stringify(this.genModule));
+					this.push(JSON.stringify(this.genModule, null, "  "));
 					this.emit('end');
 				}
 			}).bind(this), 1);
@@ -70,56 +69,12 @@ class Parser extends Duplex {
 				this.tokens.push(JSON.parse(tokenStr));
 			}
 		}
-		// Push EOF
-		this.tokens.push({
-			type: "EOF"
-		});
-		this._parse();
-	}
-	_parse() {
-		// Define the context
-		var context = {
-			stack: [],
-			states: [0],
-			result: null,
-			typedef: {}
-		};
 		// Parse
-		try{
-			while(context.result == null){
-				// Get input token
-				var input = this.tokens[0];
-				// Deal with typedef_name
-				if(input.type == "identifier"){
-					if(context.typedef[input.value]){
-						input.type = "typedef_name";
-					}
-				}
-				// Get action
-				var action = parseTable[context.states[0]][getStateKey(input)];
-				if(Number.isInteger(action)){
-					context.stack.push(input);
-					this.tokens.shift();
-					context.states.unshift(action);
-				}else if(typeof action === 'function'){
-					var reducedNode = action(context); // Stack and states should be popped inside action
-					context.stack.push(reducedNode);
-					context.states.unshift(parseTable[context.states[0]][getStateKey(reducedNode)]);
-				}else{
-					throw ParseError(context, input);
-				}
-			}
-		}catch(err){
-			this.emit('error', err);
-		}
+		var context = {
+			typedefs: []
+		};
+		this.tokens.cursor = 0;
+		this.genModule = ExtDefs.translation_unit(context, this.tokens);
 	}
 }
 module.exports = new Parser();
-
-function getStateKey(node){
-	if(node.type == "keyword" || node.type == "punctuator"){
-		return node.value;
-	}else{
-		return node.type;
-	}
-}
