@@ -38,6 +38,12 @@ module.exports = {
 	initializer_list: initializer_list
 };
 
+/* declaration{
+	type: "declaration"
+	specifiers?: Array of specifiers in declaration_specifiers
+	static_assert? Object of static_assert
+} */
+
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
@@ -441,26 +447,42 @@ function typedef_name(context, tokens){
 	return null;
 }
 
+/* type_qualifier: {
+	type: "type_qualifier"
+	value: String of qualifier name
+} */
 function type_qualifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("const", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "type_qualifier",
+			value: "const"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("restrict", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "type_qualifier",
+			value: "restrict"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("volatile", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "type_qualifier",
+			value: "volatile"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Atomic", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "type_qualifier",
+			value: "_Atomic"
+		};
 	}
 	return null;
 }
@@ -501,20 +523,27 @@ function alignment_specifier(context, tokens){
 	type: "declaration_specifiers"
 	specifiers: Array of specifiers
 } */
-
 function declaration_specifiers(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [storage_class_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1]){
+			exprs[1].specifiers.unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return {
+				type: "declaration_specifiers",
+				specifiers: [exprs[0]]
+			};
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [type_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.push(exprs[0]);
+			exprs[1].specifiers.unshift(exprs[0]);
 			return exprs[1];
 		}else{
 			return {
@@ -527,19 +556,43 @@ function declaration_specifiers(context, tokens){
 	exprs = [type_qualifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1]){
+			exprs[1].specifiers.unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return {
+				type: "declaration_specifiers",
+				specifiers: [exprs[0]]
+			};
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [function_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1]){
+			exprs[1].specifiers.unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return {
+				type: "declaration_specifiers",
+				specifiers: [exprs[0]]
+			};
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [alignment_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1]){
+			exprs[1].specifiers.unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return {
+				type: "declaration_specifiers",
+				specifiers: [exprs[0]]
+			};
+		}
 	}
 	return null;
 }
@@ -628,82 +681,198 @@ function designator(context, tokens){
 	return null;
 }
 
+/* declarator{
+	type: "declarator",
+	pointers? Array of pointers in pointer
+	direct_declarator: Object of direct_declarator
+} */
 function declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [pointer(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? direct_declarator(context, tokens) : null);
+	exprs.push(direct_declarator(context, tokens));
 	if(exprs[1] != null){
-		// TODO:
+		var ret = {
+			type: "declarator",
+			direct_declarator: exprs[1]
+		};
+		if(exprs[0] != null){
+			ret.pointers = exprs[0].pointers;
+		}
+		return ret;
 	}
 	return null;
 }
 
+/* direct_declarator{
+	type: "direct_declarator",
+	tails: Array of direct_declarator_tail
+} */
 function direct_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		var ret = {
+			type: "direct_declarator",
+			tails: [{
+				type: "direct_declarator_tail",
+				identifier: exprs[0]
+			}]
+		};
+		if(exprs[1] != null){
+			ret.tails = ret.tails.concat(exprs[1]);
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length-1] ? declarator(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		var ret = {
+			type: "direct_declarator",
+			tails: [{
+				type: "direct_declarator_tail",
+				declarator: exprs[1]
+			}]
+		};
+		if(exprs[3] != null){
+			ret.tails = ret.tails.concat(exprs[3]);
+		}
+		return ret;
 	}
-	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	return null;
+}
+
+/* direct_declarator_tail{
+	type: "direct_declarator_tail",
+	identifier?: Object of identifier
+	declarator?: Object of declarator
+	parameter_type_list?: Object of parameter_type_list
+	identifier_list?: Object of identifier_list
+	isStatic?: True to indicate static
+	isVariable?: True to indicate variable-length array
+	type_qualifier_list?: Object of type_qualifier_list
+	assignment_expression?: Object of assignment_expression
+}
+	direct_declarator_tail is created to eliminate left recursion
+	return an array of direct_declarator_tail
+*/
+function direct_declarator_tail(context, tokens){
+	var cursor = tokens.cursor;
+	var exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[4] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-2] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-3] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[3] != null){
+		var tailObj = {
+			type: "direct_declarator_tail",
+			type_qualifier_list: exprs[1],
+			assignment_expression: exprs[2]
+		};
+		if(exprs[4] != null){
+			exprs[4].unshift(tailObj);
+			return exprs[4];
+		}else{
+			return [tailObj];
+		}
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? expressions.assignment_expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("*", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
+		var tailObj = {
+			type: "direct_declarator_tail",
+			type_qualifier_list: exprs[2],
+			assignment_expression: exprs[3],
+			isStatic: true
+		};
+		if(exprs[5] != null){
+			exprs[5].unshift(tailObj);
+			return exprs[5];
+		}else{
+			return [tailObj];
+		}
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs = [getToken("[", tokens)];
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
+		var tailObj = {
+			type: "direct_declarator_tail",
+			type_qualifier_list: exprs[1],
+			assignment_expression: exprs[3],
+			isStatic: true
+		};
+		if(exprs[5] != null){
+			exprs[5].unshift(tailObj);
+			return exprs[5];
+		}else{
+			return [tailObj];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("[", tokens)];
+	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken("*", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[2] != null && exprs[3] != null){
+		var tailObj = {
+			type: "direct_declarator_tail",
+			type_qualifier_list: exprs[1],
+			isVariable: true
+		};
+		if(exprs[4] != null){
+			exprs[4].unshift(tailObj);
+			return exprs[4];
+		}else{
+			return [tailObj];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length-1] ? parameter_type_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
+		var tailObj = {
+			type: "direct_declarator_tail",
+			parameter_type_list: exprs[1]
+		};
+		if(exprs[3] != null){
+			exprs[3].unshift(tailObj);
+			return exprs[3];
+		}else{
+			return [tailObj];
+		}
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length-1] ? identifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-2] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[2] != null){
+		var tailObj = {
+			type: "direct_declarator_tail",
+			identifier_list: exprs[1]
+		};
+		if(exprs[3] != null){
+			exprs[3].unshift(tailObj);
+			return exprs[3];
+		}else{
+			return [tailObj];
+		}
 	}
 	return null;
 }
@@ -843,66 +1012,89 @@ function identifier_list(context, tokens){
 	return null;
 }
 
+/* type_qualifier_list{
+	type: "type_qualifier_list"
+	qualifiers: Array of type_qualifiers
+} */
 function type_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [type_qualifier(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [type_qualifier_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? type_qualifier(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		exprs[1].qualifiers.push(exprs[0]);
+		return exprs[1];
+	}else if(exprs[0] != null){
+		return {
+			type: "type_qualifier_list",
+			qualifiers: [exprs[0]]
+		};
 	}
 	return null;
 }
 
+/* pointer{
+	type: "pointer"
+	pointers: Array of [Array of type_qualifiers in type_qualifier_list or null]
+} */
 function pointer(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("*", tokens)];
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [getToken("*", tokens)];
-	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? pointer(context, tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? pointer(context, tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].pointers.push(exprs[1]);
+		return exprs[2];
+	}else if(exprs[0] != null){
+		return {
+			type: "pointer",
+			pointers: [exprs[1]]
+		};
 	}
 	return null;
 }
 
+/* init_declarator{
+	type: "init_declarator",
+	declarator: Object of declarator,
+	initializer?: Object of initializer
+} */
 function init_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declarator(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [declarator(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("=", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? init(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? initializer(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return{
+			type: "init_declarator",
+			declarator: exprs[0],
+			initializer: exprs[2]
+		};
+	}else if(exprs[0] != null){
+		return{
+			type: "init_declarator",
+			declarator: exprs[0]
+		};
 	}
 	return null;
 }
 
+/* init_declarator_list{
+	type: "init_declarator_list",
+	init_declarators: Array of init_declarator
+} */
 function init_declarator_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [init_declarator(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [init_declarator_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? init_declarator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? init_declarator_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[0].init_declarators.push(exprs[2]);
+		return exprs[0];
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return{
+			type: "init_declarator_list",
+			init_declarators: [exprs[0]]
+		};
 	}
 	return null;
 }

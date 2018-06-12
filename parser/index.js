@@ -22,7 +22,7 @@ class Parser extends Duplex {
 		this.on('finish', this._unpipe);
 	}
 	clean() {
-		this.genModule = null;
+		this.genAST = null;
 		this.tokens = [];
 		this.dataStr = "";
 	}
@@ -52,9 +52,9 @@ class Parser extends Duplex {
 	_read(){
 		try{
 			var timer = setInterval((() => {
-				if(this.genModule){
+				if(this.genAST){
 					clearInterval(timer);
-					this.push(JSON.stringify(this.genModule, null, "  "));
+					this.push(JSON.stringify(this.genAST, null, "  "));
 					this.emit('end');
 				}
 			}).bind(this), 1);
@@ -74,7 +74,7 @@ class Parser extends Duplex {
 			typedefs: []
 		};
 		this.tokens.cursor = 0;
-		this.genModule = ExtDefs.translation_unit(context, this.tokens);
+		this.genAST = ExtDefs.translation_unit(context, this.tokens);
 	}
 }
 module.exports = new Parser();
