@@ -1,0 +1,14 @@
+{
+    "plugins": ["plugins/markdown"],
+    "source":{
+        "include":[
+            "lex.js",
+            "pp.js",
+            "parser"
+        ]
+    },
+    "opts": {
+        "destination": "./doc/",
+        "recurse": true
+    }
+}

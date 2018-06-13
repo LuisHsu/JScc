@@ -6,11 +6,12 @@
   "devDependencies": {
     "diff": "^3.5.0",
     "eslint": "*",
-    "jasmine": "^3.1.0"
+    "jasmine": "^3.1.0",
+    "jsdoc": "^3.5.5"
   },
   "scripts": {
     "test": "jasmine",
-    "searchState": "node parserGen/searchState.js"
+    "doc": "./node_modules/.bin/jsdoc -c jsdoc.json -P ./package.json"
   },
   "repository": {
     "type": "git",
