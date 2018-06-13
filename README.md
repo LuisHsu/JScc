@@ -1,4 +1,4 @@
-# jscc
+# JSCC
 
 #### 為 [WasmVM](https://github.com/LuisHsu/WasmVM) ，以 Node.js 打造的 C 編譯器
 

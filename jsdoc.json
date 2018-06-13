@@ -1,5 +1,7 @@
 {
-    "plugins": ["plugins/markdown"],
+    "plugins": [
+        "plugins/markdown"
+    ],
     "source":{
         "include":[
             "lex.js",
@@ -7,8 +9,29 @@
             "parser"
         ]
     },
+    "templates": {
+        "name": "JSCC",
+        "footerText": "GitHub Repository: <a href='https://github.com/LuisHsu/jscc'>https://github.com/LuisHsu/jscc</a>",
+        "logo": {
+            "url": "logo.png",
+            "width": "0px",
+            "height": "0px"
+        },
+        "default": {
+            "staticFiles": {
+                "include": ["style/"]
+            }
+        },
+        "css": [
+            "doc.css"
+        ]
+    },
     "opts": {
+        "template": "node_modules/tui-jsdoc-template",
         "destination": "./doc/",
-        "recurse": true
+        "recurse": true,
+        "package": "./package.json",
+        "readme": "./README.md",
+        "private": true
     }
 }
