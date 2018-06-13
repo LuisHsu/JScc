@@ -15,7 +15,20 @@
 const { Transform } = require('stream');
 const { Buffer } = require('buffer');
 
+/** Transform
+ * @classdesc Node.js 的轉換串流
+ * @external Transform
+ * @see [Stream]{@link https://nodejs.org/api/stream.html}
+ */
+
+/** 詞法分析器
+ * @extends {Transform}
+ */
 class Lexer extends Transform{
+	/**
+	 * 初始化並設定轉換串流
+	 * @param {Option} option Transform Stream 的設定選項， 請參考 [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
+	 */
 	constructor(option){
 		super(option);
 		this.dataStr = "";
@@ -34,6 +47,17 @@ class Lexer extends Transform{
 			}).bind(this));
 		}).bind(this));
 	}
+	/** _transform的回調函式
+	 * @callback Lexer~_transformCallback
+	 * @param {Error} err 如果發生錯誤則是錯誤物件，否則是 undefined
+	 */
+
+	/** 轉換串流的 _transform 函式
+	 * @private
+	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
+	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
+	 * @param  {Lexer~_transformCallback} callback 回調函式
+	 */
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();
 		try{
@@ -46,10 +70,14 @@ class Lexer extends Transform{
 				str += token + '\n';
 			});
 			this.push(str);
+			callback();
 		}catch(err){
-			callback(err, null);
+			callback(err);
 		}
 	}
+	/** 取得一個單詞(token)
+	 * @private
+	 */
 	getToken(){
 		var token;
 		this.dataStr = this.dataStr.trim();
@@ -66,7 +94,9 @@ class Lexer extends Transform{
 		}
 		return null;
 	}
-
+	/** 解析並取得一個關鍵字單詞
+	 * @private
+	 */
 	tokKeyword(){
 		var regex = /^(_Static_assert|_Thread_local|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic|_Imaginary|_Noreturn)/;
 		var matched = regex.exec(this.dataStr);
@@ -80,7 +110,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個名稱單詞
+	 * @private
+	 */
 	tokIdentifier(){
 		var regex = /^(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|[_A-Za-z])(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|\w)*/;
 		var matched = regex.exec(this.dataStr);
@@ -113,7 +145,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個浮點數常數單詞
+	 * @private
+	 */
 	tokFloat(){
 		var regex = /^(0[xX](\.[\wA-Fa-f]+|[\wA-Fa-f]+\.?[\wA-Fa-f]*)[pP][\+\-]?\w+|((\.\d+|\d+\.\d*)([eE][\+\-]?\d+)?|\d+[eE][\+\-]?\d+))[flFL]?/;
 		var matched = regex.exec(this.dataStr);
@@ -154,7 +188,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個整數常數單詞
+	 * @private
+	 */
 	tokInteger(){
 		var regex = /^(0x[\dA-Fa-f]+|0[0-7]*|\d+)([uU]?(ll|LL|[lL])?[uU]?)?/;
 		var matched = regex.exec(this.dataStr);
@@ -198,7 +234,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個字元常數單詞
+	 * @private
+	 */
 	tokCharacter(){
 		var regex = /^(u|U|L)?\'(\\\'|[^\"\n])*\'/;
 		var matched = regex.exec(this.dataStr);
@@ -258,7 +296,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個字串常數單詞
+	 * @private
+	 */
 	tokString(){
 		var regex = /^(u8|u|U|L)?\"(\\\"|[^\"\n])*\"/;
 		var matched = regex.exec(this.dataStr);
@@ -318,7 +358,9 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
-
+	/** 解析並取得一個符號單詞
+	 * @private
+	 */
 	tokPunctuator(){
 		var regex = /^(%\:%\:|\.\.\.|>>=|<<=|\->|\+\+|\-\-|<=|>=|<<|>>|\*=|\/=|%=|\+=|\-=|##|<\:|\:>|<%|%>|%\:|==|!=|&=|\^=|&&|\|\||\|=|\[|\]|\(|\)|\{|\}|\.|&|\*|\+|\-|~|!|\/|%|<|>|\?|\:|;|=|\,|#|\^|\|)/;
 		var matched = regex.exec(this.dataStr);

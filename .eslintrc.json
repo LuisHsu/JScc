@@ -16,7 +16,7 @@
         "no-extra-parens":"error",
         "no-extra-semi":"error",
         "no-unreachable":"error",
-        "valid-jsdoc":"warn",
+        "valid-jsdoc":"off",
         "use-isnan":"error",
         "curly":"error",
         "default-case":"error",

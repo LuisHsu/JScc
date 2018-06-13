@@ -6,11 +6,15 @@
   "devDependencies": {
     "diff": "^3.5.0",
     "eslint": "*",
-    "jasmine": "^3.1.0"
+    "express": "^4.16.3",
+    "jasmine": "^3.1.0",
+    "jsdoc": "^3.5.5",
+    "tui-jsdoc-template": "^1.2.2"
   },
   "scripts": {
     "test": "jasmine",
-    "searchState": "node parserGen/searchState.js"
+    "doc": "jsdoc -c jsdoc.json",
+    "docServer": "node docserver.js"
   },
   "repository": {
     "type": "git",
@@ -26,5 +30,6 @@
   "bugs": {
     "url": "https://github.com/LuisHsu/jscc/issues"
   },
-  "homepage": "https://github.com/LuisHsu/jscc#readme"
+  "homepage": "https://github.com/LuisHsu/jscc#readme",
+  "dependencies": {}
 }
