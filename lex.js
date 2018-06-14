@@ -15,14 +15,8 @@
 const { Transform } = require('stream');
 const { Buffer } = require('buffer');
 
-/** Transform
- * @classdesc Node.js 的轉換串流
- * @external Transform
- * @see [Stream]{@link https://nodejs.org/api/stream.html}
- */
-
 /** 詞法分析器
- * @extends {Transform}
+ * @extends Transform
  * @requires stream
  * @requires buffer
  * @property {String} dataStr 暫存接收到的資料

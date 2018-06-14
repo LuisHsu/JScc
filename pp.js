@@ -450,6 +450,12 @@ class Preprocessor extends Transform{
 		line = line.substr(line.match(regex)[0].length);
 		throw `[PP]: ${line}`;
 	}
+	/** 展開巨集
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 * @param  {bool} evalDefined 是否要展開 defined 運算子
+	 * @param  {Object} argList 遞迴呼叫時傳入引數集合
+	 */
 	evalMacro(line, evalDefined, argList){
 		var modified = false;
 		do{
@@ -535,6 +541,11 @@ class Preprocessor extends Transform{
 		}while(modified);
 		return line;
 	}
+
+	/** 執行 defined 運算子
+	 * @private
+	 * @param {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	defined(line){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|defined\s*(\(\s*\w+\s*\)|\w+\s*))/g;
 		var preLastIndex = 0;
@@ -558,6 +569,10 @@ class Preprocessor extends Transform{
 		line += processing.substr(preLastIndex);
 		return line;
 	}
+	/** 執行 pragma 運算子
+	 * @private
+	 * @param {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	pragma(line){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|_Pragma\s*\(\s*\"[^\"\n]*\"\s*\))/g;
 		var preLastIndex = 0;
@@ -576,6 +591,10 @@ class Preprocessor extends Transform{
 		line += processing.substr(preLastIndex);
 		return line;
 	}
+	/** 執行 ## 運算子
+	 * @private
+	 * @param {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	hashhash(line){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|\s*##\s*)/g;
 		var preLastIndex = 0;
@@ -594,6 +613,10 @@ class Preprocessor extends Transform{
 		line += processing.substr(preLastIndex);
 		return line;
 	}
+	/** 處理digraph
+	 * @private
+	 * @param {String} data 輸入的資料字串
+	 */
 	digraph(data){
 		var regex = /(\"(\\\"|[^\"\n])*\"|(<\:|\:>|<%|%>|%\:))/g;
 		var preLastIndex = 0;
@@ -624,6 +647,11 @@ class Preprocessor extends Transform{
 		data += processing.substr(preLastIndex);
 		return data;
 	}
+	/** 根據引數集合替換程式碼中的字
+	 * @private
+	 * @param {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 * @param  {Object} argList 引數集合
+	 */
 	replaceArgs(line, argList){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\'(\\\'|[^\'\n])*\'|[A-Za-z_]\w*)/g;
 		var preLastIndex = 0;
@@ -653,6 +681,10 @@ class Preprocessor extends Transform{
 		line += processing.substr(preLastIndex);
 		return line;
 	}
+	/** 消除單行註解
+	 * @private
+	 * @param {String} data 輸入的資料字串
+	 */
 	singleLineComment(data){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\/\/[^\n]*\n)/g;
 		var preLastIndex = 0;
@@ -671,6 +703,10 @@ class Preprocessor extends Transform{
 		data += processing.substr(preLastIndex);
 		return data;
 	}
+	/** 消除多行註解
+	 * @private
+	 * @param {String} data 輸入的資料字串
+	 */
 	multiLineComment(data){
 		var regex = /(\"(\\\"|[^\"\n])*\"|\/\*([^\*]|\*[^\/])*\*\/)/g;
 		var preLastIndex = 0;
@@ -689,6 +725,10 @@ class Preprocessor extends Transform{
 		data += processing.substr(preLastIndex);
 		return data;
 	}
+	/** 執行前處理指令中的敘述式
+	 * @private
+	 * @param {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	evalExpr(line){
 		var integerRegex = /(0[xX][\dA-Fa-f]*|0[1-7]*|[1-9]\d*)([uU](ll|LL|[lL])?|(ll|LL|[lL])[uU]?)?/;
 		var floatRegex = /(0[xX](\.[\dA-Fa-f]+|[\dA-Fa-f]+.[\dA-Fa-f]*)[pP][+-]?\d+|((\.\d+|\d+\.\d*)([eE][+-]?\d+)?|\d+[eE][+-]?\d+))[fFlL]?/;
@@ -777,6 +817,7 @@ class Preprocessor extends Transform{
 			throw `[PP]: Invalid expression in preprocessor integer constant expression.`;
 		}
 	}
+	/** 取得日期字串 */
 	getDateStr(){
 		const curDate = new Date();
 		var ret = "\"";

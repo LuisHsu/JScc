@@ -15,12 +15,19 @@
 const { Duplex } = require('stream');
 const ExtDefs = require('./extDefs');
 
+/** 語法解析器
+ * @extends Duplex
+ * @property {Object} genAST 產生的語法樹
+ * @property {Array} tokens 輸入的詞彙
+ * @property {String} 串流輸入的資料暫存字串
+ */
 class Parser extends Duplex {
 	constructor(option) {
 		super(option);
 		this.clean();
 		this.on('finish', this._unpipe);
 	}
+	/** 清除語法解析器的成員資料 */
 	clean() {
 		this.genAST = null;
 		this.tokens = [];
