@@ -75,6 +75,9 @@ class Parser extends Duplex {
 		};
 		this.tokens.cursor = 0;
 		this.genAST = ExtDefs.translation_unit(context, this.tokens);
+		if(this.genAST == null){
+			this.genAST = "Error"; // FIXME: Detailed error message
+		}
 	}
 }
 module.exports = new Parser();
