@@ -40,7 +40,8 @@ module.exports = {
 
 /* declaration{
 	type: "declaration"
-	specifiers?: Array of specifiers in declaration_specifiers
+	specifiers?: Array of specifier in declaration_specifiers
+	init_declarators? Array of init_declarator in init_declarator_list
 	static_assert? Object of static_assert
 } */
 
@@ -48,9 +49,13 @@ function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? init_declarator_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "declaration",
+			specifiers: exprs[0].specifiers,
+			init_declarators: exprs[1] ? exprs[1].init_declarators : null
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [static_assert_declaration(context, tokens)];

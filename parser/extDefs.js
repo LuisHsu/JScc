@@ -1,17 +1,22 @@
 const decl = require('./declarations');
 const stmt = require('./statements');
 
+/* declaration{
+	type: "translation_unit"
+	external_declarations: Array of function_definition or declaration
+} */
 function translation_unit(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [external_declaration(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [translation_unit(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? external_declaration(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? translation_unit(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		exprs[1].external_declarations.unshift(exprs[0]);
+		return exprs[1];
+	}else if(exprs[0] != null){
+		return {
+			type: "translation_unit",
+			external_declarations: [exprs[0]]
+		};
 	}
 	return null;
 }
@@ -20,12 +25,12 @@ function external_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [function_definition(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [decl.declaration(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	return null;
 }
