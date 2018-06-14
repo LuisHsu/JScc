@@ -23,10 +23,14 @@ const { Buffer } = require('buffer');
 
 /** 詞法分析器
  * @extends {Transform}
+ * @requires stream
+ * @requires buffer
+ * @property {String} dataStr 暫存接收到的資料
  */
 class Lexer extends Transform{
 	/**
 	 * 初始化並設定轉換串流
+	 * @method
 	 * @param {Option} option Transform Stream 的設定選項， 請參考 [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
 	 */
 	constructor(option){
@@ -47,16 +51,12 @@ class Lexer extends Transform{
 			}).bind(this));
 		}).bind(this));
 	}
-	/** _transform的回調函式
-	 * @callback Lexer~_transformCallback
-	 * @param {Error} err 如果發生錯誤則是錯誤物件，否則是 undefined
-	 */
-
 	/** 轉換串流的 _transform 函式
 	 * @private
 	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
 	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
-	 * @param  {Lexer~_transformCallback} callback 回調函式
+	 * @param  {function} callback 回調函式。包含一個參數 `err`，如果有錯誤引入錯誤物件，否則為`undefined`
+	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
 	 */
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();
