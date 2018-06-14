@@ -124,6 +124,12 @@ function storage_class_specifier(context, tokens){
 	return null;
 }
 
+
+/* static_assert_declaration: {
+	type: "static_assert_declaration"
+	expression: String of specifier name
+	string: String token of static assert
+} */
 function static_assert_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Static_assert", tokens)];
@@ -134,7 +140,11 @@ function static_assert_declaration(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
-		// TODO:
+		return {
+			type: "static_assert_declaration",
+			expression: exprs[2],
+			string: exprs[4]
+		};
 	}
 	return null;
 }
@@ -144,7 +154,6 @@ function static_assert_declaration(context, tokens){
 	value: String of specifier name
 	specifier?: Object of specifier body, if needed
 } */
-
 function type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("void", tokens)];
