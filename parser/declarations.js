@@ -60,41 +60,66 @@ function declaration(context, tokens){
 	tokens.cursor = cursor;
 	exprs = [static_assert_declaration(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "declaration",
+			static_assert: exprs[0]
+		};
 	}
 	return null;
 }
 
+/* storage_class_specifier: {
+	type: "storage_class_specifier"
+	value: String of specifier name
+} */
 function storage_class_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("typedef", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "typedef"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("extern", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "extern"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("static", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "static"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Thread_local", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "_Thread_local"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("auto", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "auto"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("register", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "register"
+		};
 	}
 	return null;
 }
