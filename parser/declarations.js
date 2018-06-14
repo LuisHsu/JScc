@@ -273,24 +273,44 @@ function type_specifier(context, tokens){
 	return null;
 }
 
+/* atomic_type_specifier: {
+	type: "atomic_type_specifier"
+	type_name: Object of type_name
+} */
+
 function atomic_type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Atomic", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? type_name(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
-	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
+		return {
+			type: "atomic_type_specifier",
+			type_name: exprs[2]
+		};
 	}
 	return null;
 }
 
+/* type_name: {
+	type: "type_name"
+	specifier_qualifiers: Array of type_specifier or type_qualifier in specifier_qualifier_list
+	abstract_declarator?: Object of abstract_declarator
+} */
 function type_name(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [specifier_qualifier_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		var ret = {
+			type: "type_name",
+			specifier_qualifiers: exprs[0]
+		};
+		if(exprs[1]){
+			ret.abstract_declarator = exprs[1];
+		}
+		return ret;
 	}
 	return null;
 }
@@ -329,18 +349,31 @@ function struct_declaration_list(context, tokens){
 	return null;
 }
 
+/* specifier_qualifier_list: {
+	return Array of sprcifier or qualifiers
+} */
 function specifier_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [type_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1] != null){
+			exprs[1].unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return [exprs[0]];
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [type_qualifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1] != null){
+			exprs[1].unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return [exprs[0]];
+		}
 	}
 	return null;
 }
