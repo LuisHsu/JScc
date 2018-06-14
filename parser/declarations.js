@@ -40,7 +40,8 @@ module.exports = {
 
 /* declaration{
 	type: "declaration"
-	specifiers?: Array of specifiers in declaration_specifiers
+	specifiers?: Array of specifier in declaration_specifiers
+	init_declarators? Array of init_declarator in init_declarator_list
 	static_assert? Object of static_assert
 } */
 
@@ -48,52 +49,87 @@ function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? init_declarator_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "declaration",
+			specifiers: exprs[0].specifiers,
+			init_declarators: exprs[1] ? exprs[1].init_declarators : null
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [static_assert_declaration(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "declaration",
+			static_assert: exprs[0]
+		};
 	}
 	return null;
 }
 
+/* storage_class_specifier: {
+	type: "storage_class_specifier"
+	value: String of specifier name
+} */
 function storage_class_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("typedef", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "typedef"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("extern", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "extern"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("static", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "static"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Thread_local", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "_Thread_local"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("auto", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "auto"
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("register", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "storage_class_specifier",
+			value: "register"
+		};
 	}
 	return null;
 }
 
+
+/* static_assert_declaration: {
+	type: "static_assert_declaration"
+	expression: String of specifier name
+	string: String token of static assert
+} */
 function static_assert_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Static_assert", tokens)];
@@ -104,7 +140,11 @@ function static_assert_declaration(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
-		// TODO:
+		return {
+			type: "static_assert_declaration",
+			expression: exprs[2],
+			string: exprs[4]
+		};
 	}
 	return null;
 }
@@ -114,7 +154,6 @@ function static_assert_declaration(context, tokens){
 	value: String of specifier name
 	specifier?: Object of specifier body, if needed
 } */
-
 function type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("void", tokens)];
@@ -243,24 +282,44 @@ function type_specifier(context, tokens){
 	return null;
 }
 
+/* atomic_type_specifier: {
+	type: "atomic_type_specifier"
+	type_name: Object of type_name
+} */
+
 function atomic_type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Atomic", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? type_name(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
-	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
+		return {
+			type: "atomic_type_specifier",
+			type_name: exprs[2]
+		};
 	}
 	return null;
 }
 
+/* type_name: {
+	type: "type_name"
+	specifier_qualifiers: Array of type_specifier or type_qualifier in specifier_qualifier_list
+	abstract_declarator?: Object of abstract_declarator
+} */
 function type_name(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [specifier_qualifier_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		var ret = {
+			type: "type_name",
+			specifier_qualifiers: exprs[0]
+		};
+		if(exprs[1]){
+			ret.abstract_declarator = exprs[1];
+		}
+		return ret;
 	}
 	return null;
 }
@@ -299,18 +358,31 @@ function struct_declaration_list(context, tokens){
 	return null;
 }
 
+/* specifier_qualifier_list: {
+	return Array of sprcifier or qualifiers
+} */
 function specifier_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [type_specifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1] != null){
+			exprs[1].unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return [exprs[0]];
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [type_qualifier(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? specifier_qualifier_list(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		if(exprs[1] != null){
+			exprs[1].unshift(exprs[0]);
+			return exprs[1];
+		}else{
+			return [exprs[0]];
+		}
 	}
 	return null;
 }
