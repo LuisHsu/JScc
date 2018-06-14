@@ -17,10 +17,43 @@ const Path = require("path");
 const log = require("./errors")(process.cwd() + Path.sep + process.argv[2]);
 const { Transform } = require('stream');
 
+/** 前處理器
+ * @extends {Transform}
+ * @requires stream
+ * @requires fs
+ * @requires path
+ * @requires errors
+ * @property {String} dataStr 暫存接收到的資料
+ * @property {MacroMap} macroMap 已定義的巨集
+ * @property {bool} skipLine 是否要跳過下一行指令，運用在`#if`、`#else`、`#elif`
+ * @property {bool} ifEnded `#if` 是否已經結束，運用在`#if`、`#endif`
+ * @property {bool} countIf `#if` 的階層數
+ * @property {String} outStr 要輸出的字串
+ */
 class Preprocessor extends Transform{
+	/**
+	 * 初始化、設定轉換串流並定義必要的巨集(Macro)
+	 * @param {Option} option Transform Stream 的設定選項， 請參考 [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
+	 */
 	constructor(option){
 		super(option);
 		this.dataStr = "";
+		/** 巨集集合，儲存所有巨集
+		 * @typedef Preprocessor#MacroMap
+		 * @property {Macro} __STDC__ 是否為標準的 C 編譯器，數值為"1"
+		 * @property {Macro} __STDC_HOSTED__ 是否為 Hosted 的 C 編譯器，數值為"0"，
+		 * @property {Macro} __STDC_VERSION__ C 語言規格的版本，數值為"201104L"
+		 * @property {Macro} __DATE__ 編譯時的日期
+		 * @property {Macro} __FILE__ 編譯時的檔案名稱
+		 * @property {Macro} __LINE__ 編譯時的行號
+		 * @property {Macro} __TIME__ 編譯時的時間
+		 */
+		/** 巨集物件
+		 * @typedef Preprocessor#Macro
+		 * @property {String} str 取代後的字串
+		 * @property {Array} args 函式化巨集的參數
+		 * @property {bool} va 函式化巨集是否包含可變的引數
+		 */
 		this.macroMap = {
 			__STDC__: {str: "1", args: [], va: false},
 			__STDC_HOSTED__: {str: "0", args: [], va: false},
@@ -44,6 +77,14 @@ class Preprocessor extends Transform{
 			}).bind(this));
 		}).bind(this));
 	}
+
+	/** 轉換串流的 _transform 函式
+	 * @private
+	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
+	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
+	 * @param  {function} callback 回調函式。包含一個參數 `err`，如果有錯誤引入錯誤物件，否則為`undefined`
+	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
+	 */
 	_transform(data, encoding, callback){
 		this.dataStr += data.toString();
 		try{
@@ -58,6 +99,12 @@ class Preprocessor extends Transform{
 	out(data){
 		this.outStr += data;
 	}
+
+	/** 執行前處理
+	 * @private
+	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
+	 * @param  {bool} isLastChunk 表示這個資料緩衝是不是最後一個
+	 */
 	runPP(data, isLastChunk){
 		// Replace digraph
 		data = this.digraph(data);
@@ -108,6 +155,10 @@ class Preprocessor extends Transform{
 		}
 		return lineChunk.pop();
 	}
+	/** 執行#defined
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runDefine(line){
 		var regex = /\s*#\s*define(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -149,6 +200,10 @@ class Preprocessor extends Transform{
 		this.macroMap[macroName] = macro;
 		return true;
 	}
+	/** 執行#if
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runIf(line){
 		var regex = /\s*#\s*if(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -166,6 +221,10 @@ class Preprocessor extends Transform{
 		this.skipLine = value == 0;
 		return true;
 	}
+	/** 執行#ifdef
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runIfdef(line){
 		var regex = /\s*#\s*ifdef(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -182,6 +241,10 @@ class Preprocessor extends Transform{
 		this.countIf += 1;
 		return true;
 	}
+	/** 執行#undef
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runUndef(line){
 		var regex = /\s*#\s*undef(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -199,6 +262,10 @@ class Preprocessor extends Transform{
 		}
 		return true;
 	}
+	/** 執行#ifndef
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runIfndef(line){
 		var regex = /\s*#\s*ifndef(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -215,6 +282,10 @@ class Preprocessor extends Transform{
 		this.countIf += 1;
 		return true;
 	}
+	/** 執行#line
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runLine(line){
 		var regex = /\s*#\s*line(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -246,6 +317,10 @@ class Preprocessor extends Transform{
 
 		return true;
 	}
+	/** 執行#elif
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runElif(line){
 		var regex = /\s*#\s*elif(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -271,6 +346,10 @@ class Preprocessor extends Transform{
 		}
 		return true;
 	}
+	/** 執行#else
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runElse(line){
 		var regex = /\s*#\s*else(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -284,6 +363,10 @@ class Preprocessor extends Transform{
 		}
 		return true;
 	}
+	/** 執行#include
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runInclude(line){
 		var regex = /\s*#\s*include(\s*|$)/;
 		if(line.search(regex) != 0){
@@ -326,6 +409,10 @@ class Preprocessor extends Transform{
 		}
 		return true;
 	}
+	/** 執行#endif
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runEndif(line){
 		var regex = /\s*#\s*endif(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -339,6 +426,10 @@ class Preprocessor extends Transform{
 		this.countIf -= 1;
 		return true;
 	}
+	/** 執行#pragma
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runPragma(line){
 		var regex = /\s*#\s*pragma(\s+|$)/;
 		if(line.search(regex) != 0){
@@ -346,6 +437,10 @@ class Preprocessor extends Transform{
 		}
 		return true;
 	}
+	/** 執行#error
+	 * @private
+	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 */
 	runError(line){
 		line = line.trim();
 		var regex = /\s*#\s*error(\s+|$)/;
