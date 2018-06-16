@@ -1,6 +1,11 @@
 const {getToken} = require('./utils');
 const expressions = require('./expressions');
 
+/**
+ * 宣告
+ * @module Declarations
+ */
+
 module.exports = {
 	declaration: declaration,
 	declaration_specifiers: declaration_specifiers,
@@ -44,7 +49,6 @@ module.exports = {
 	init_declarators? Array of init_declarator in init_declarator_list
 	static_assert? Object of static_assert
 } */
-
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];

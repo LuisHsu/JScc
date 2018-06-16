@@ -16,10 +16,11 @@ const { Duplex } = require('stream');
 const ExtDefs = require('./extDefs');
 
 /** 語法解析器
+ * @requires stream
  * @extends Duplex
  * @property {Object} genAST 產生的語法樹
  * @property {Array} tokens 輸入的詞彙
- * @property {String} 串流輸入的資料暫存字串
+ * @property {String} dataStr 串流輸入的資料暫存字串
  */
 class Parser extends Duplex {
 	constructor(option) {
@@ -33,6 +34,13 @@ class Parser extends Duplex {
 		this.tokens = [];
 		this.dataStr = "";
 	}
+	/** 雙向串流的 _write 函式
+	 * @private
+	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
+	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
+	 * @param  {function} callback 回調函式。包含一個參數 `err`，如果有錯誤引入錯誤物件，否則為`undefined`
+	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
+	 */
 	_write(data, encoding, callback) {
 		this.dataStr += data.toString();
 		try {
@@ -51,11 +59,15 @@ class Parser extends Duplex {
 					callback(err);
 				}
 			}
-			callback(null);
+			callback();
 		} catch (err) {
 			callback(err);
 		}
 	}
+	/** 雙向串流的 _read 函式
+	 * @private
+	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
+	 */
 	_read(){
 		try{
 			var timer = setInterval((() => {
@@ -69,6 +81,9 @@ class Parser extends Duplex {
 			this.emit('error', err);
 		}
 	}
+	/** 讀取結束後開始解析
+	 * @private
+	 */
 	_unpipe(){
 		var splited = this.dataStr.split('\n');
 		for (var tokenStr = splited.shift(); splited.length > 0; tokenStr = splited.shift()) {
