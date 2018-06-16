@@ -2,7 +2,7 @@
   "name": "jscc",
   "version": "0.0.1",
   "description": "C Compiler for WasmVM in JavaScript",
-  "main": "pp.js",
+  "main": "jscc.js",
   "devDependencies": {
     "diff": "^3.5.0",
     "eslint": "*",
