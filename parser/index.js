@@ -92,6 +92,10 @@ class Parser extends Duplex {
 			}
 		}
 		// Parse
+		/** 背景物件
+		 * @typedef Parser#context
+		 * @property {Array} typedefs 已宣告的型別
+		 */
 		var context = {
 			typedefs: []
 		};
