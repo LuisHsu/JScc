@@ -15,8 +15,12 @@
 const { Duplex } = require('stream');
 const ExtDefs = require('./extDefs');
 
-/** 語法解析器
+/** 語法解析器模組
+ * @module Parser
  * @requires stream
+ */
+
+/** 語法解析器串流
  * @extends Duplex
  * @property {Object} genAST 產生的語法樹
  * @property {Array} tokens 輸入的詞彙
@@ -93,7 +97,8 @@ class Parser extends Duplex {
 		}
 		// Parse
 		/** 背景物件
-		 * @typedef Parser#context
+		 * @memberof module:Parser
+		 * @typedef context
 		 * @property {Array} typedefs 已宣告的型別
 		 */
 		var context = {

@@ -15,11 +15,21 @@
 const { Transform } = require('stream');
 const { Buffer } = require('buffer');
 
-/** 詞法分析器
- * @extends Transform
+/** 詞彙分析器模組
+ * @module Lex
  * @requires stream
  * @requires buffer
- * @property {String} dataStr 暫存接收到的資料
+ */
+
+/** 單詞
+ * @memberof module:Lex
+ * @class Token
+ * @property {string} type 單詞種類
+ * @property {(number|string|Buffer)} value 數值
+ */
+/** 詞彙分析器串流
+ * @extends Transform
+ * @property {string} dataStr 暫存接收到的資料
  */
 class Lexer extends Transform{
 	/**
@@ -48,7 +58,7 @@ class Lexer extends Transform{
 	/** 轉換串流的 _transform 函式
 	 * @private
 	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
-	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
+	 * @param  {string} encoding <b>[不使用]</b> 資料編碼
 	 * @param  {function} callback 回調函式。包含一個參數 `err`，如果有錯誤引入錯誤物件，否則為`undefined`
 	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
 	 */
@@ -71,6 +81,7 @@ class Lexer extends Transform{
 	}
 	/** 取得一個單詞(token)
 	 * @private
+	 * @return {null|module:Lex.Token} 成功的話回傳單詞，失敗回傳 null
 	 */
 	getToken(){
 		var token;
@@ -88,8 +99,16 @@ class Lexer extends Transform{
 		}
 		return null;
 	}
+	/** 關鍵字單詞
+	 * @memberof module:Lex
+	 * @class KeywordToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="keyword" 單詞種類
+	 * @property {string} value 關鍵字內容
+	 */
 	/** 解析並取得一個關鍵字單詞
 	 * @private
+	 * @return {null|module:Lex.KeywordToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokKeyword(){
 		var regex = /^(_Static_assert|_Thread_local|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|_Alignas|_Alignof|_Atomic|_Bool|_Complex|_Generic|_Imaginary|_Noreturn)/;
@@ -104,8 +123,16 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 名稱單詞
+	 * @memberof module:Lex
+	 * @class IdentifierToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="identifier" 單詞種類
+	 * @property {string} value 名稱內容
+	 */
 	/** 解析並取得一個名稱單詞
 	 * @private
+	 * @return {null|module:Lex.IdentifierToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokIdentifier(){
 		var regex = /^(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|[_A-Za-z])(\\u[\dA-Fa-f]{4}|\\U[\dA-Fa-f]{8}|\w)*/;
@@ -139,8 +166,17 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 浮點數常數單詞
+	 * @memberof module:Lex
+	 * @class FloatingToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="floating" 單詞種類
+	 * @property {number} value 浮點數內容
+	 * @property {boolean} double 是否為雙精度浮點數
+	 */
 	/** 解析並取得一個浮點數常數單詞
 	 * @private
+	 * @return {null|module:Lex.FloatingToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokFloat(){
 		var regex = /^(0[xX](\.[\wA-Fa-f]+|[\wA-Fa-f]+\.?[\wA-Fa-f]*)[pP][\+\-]?\w+|((\.\d+|\d+\.\d*)([eE][\+\-]?\d+)?|\d+[eE][\+\-]?\d+))[flFL]?/;
@@ -182,8 +218,18 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 整數常數單詞
+	 * @memberof module:Lex
+	 * @class IntegerToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="integer" 單詞種類
+	 * @property {number} value 整數內容
+	 * @property {boolean} unsigned 是否為有號整數
+	 * @property {number} size 位元組大小
+	 */
 	/** 解析並取得一個整數常數單詞
 	 * @private
+	 * @return {null|module:Lex.IntegerToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokInteger(){
 		var regex = /^(0x[\dA-Fa-f]+|0[0-7]*|\d+)([uU]?(ll|LL|[lL])?[uU]?)?/;
@@ -228,8 +274,17 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 字元常數單詞
+	 * @memberof module:Lex
+	 * @class CharacterToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="character" 單詞種類
+	 * @property {Buffer} value 字元內容(儲存為 Buffer)
+	 * @property {number} size 位元組大小
+	 */
 	/** 解析並取得一個字元常數單詞
 	 * @private
+	 * @return {null|module:Lex.CharacterToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokCharacter(){
 		var regex = /^(u|U|L)?\'(\\\'|[^\"\n])*\'/;
@@ -290,8 +345,17 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 字串常數單詞
+	 * @memberof module:Lex
+	 * @class StringToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="string" 單詞種類
+	 * @property {string} value 字串內容(儲存為 Buffer)
+	 * @property {number} size 位元組大小
+	 */
 	/** 解析並取得一個字串常數單詞
 	 * @private
+	 * @return {null|module:Lex.StringToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokString(){
 		var regex = /^(u8|u|U|L)?\"(\\\"|[^\"\n])*\"/;
@@ -352,8 +416,16 @@ class Lexer extends Transform{
 			return null;
 		}
 	}
+	/** 符號單詞
+	 * @memberof module:Lex
+	 * @class PunctuatorToken
+	 * @extends module:Lex.Token
+	 * @property {string} type="punctuator" 單詞種類
+	 * @property {string} value 符號內容
+	 */
 	/** 解析並取得一個符號單詞
 	 * @private
+	 * @return {null|module:Lex.PunctuatorToken} 成功的話回傳單詞，失敗回傳 null
 	 */
 	tokPunctuator(){
 		var regex = /^(%\:%\:|\.\.\.|>>=|<<=|\->|\+\+|\-\-|<=|>=|<<|>>|\*=|\/=|%=|\+=|\-=|##|<\:|\:>|<%|%>|%\:|==|!=|&=|\^=|&&|\|\||\|=|\[|\]|\(|\)|\{|\}|\.|&|\*|\+|\-|~|!|\/|%|<|>|\?|\:|;|=|\,|#|\^|\|)/;

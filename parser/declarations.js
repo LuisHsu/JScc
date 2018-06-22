@@ -1,11 +1,9 @@
 const {getToken} = require('./utils');
 const expressions = require('./expressions');
 
-/**
- * 宣告
- * @module Declarations
+/** "宣告" 模組
+ * @module Declaration
  */
-
 module.exports = {
 	declaration: declaration,
 	declaration_specifiers: declaration_specifiers,
@@ -43,12 +41,19 @@ module.exports = {
 	initializer_list: initializer_list
 };
 
-/* declaration{
-	type: "declaration"
-	specifiers?: Array of specifier in declaration_specifiers
-	init_declarators? Array of init_declarator in init_declarator_list
-	static_assert? Object of static_assert
-} */
+/** declaration "宣告" 節點
+ * @class Parser#declaration
+ * @property {String} type="declaration" 節點種類
+ * @property {Array=} specifiers declaration_specifiers 裡的 specifier 陣列
+ * @property {Array=} init_declarators init_declarator_list 裡的 init_declarator 陣列
+ * @property {static_assert=} static_assert static_assert
+ */
+/** 解析 declaration
+ * @function
+ * @memberof module:Declaration
+ * @param {Parser#context} context Parser 的背景物件
+ * @param {Token[]} tokens
+ */
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
@@ -72,10 +77,11 @@ function declaration(context, tokens){
 	return null;
 }
 
-/* storage_class_specifier: {
-	type: "storage_class_specifier"
-	value: String of specifier name
-} */
+/** storage_class_specifier 儲存識別子節點
+ * @class Parser#storage_class_specifier
+ * @property {String} type="storage_class_specifier" 節點種類
+ * @property {String} value 識別子
+ */
 function storage_class_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("typedef", tokens)];
@@ -128,12 +134,12 @@ function storage_class_specifier(context, tokens){
 	return null;
 }
 
-
-/* static_assert_declaration: {
-	type: "static_assert_declaration"
-	expression: String of specifier name
-	string: String token of static assert
-} */
+/** static_assert_declaration 靜態假設節點
+ * @class Parser#static_assert_declaration
+ * @property {String} type="static_assert_declaration" 節點種類
+ * @property {Parser#expression} expression 運算式
+ * @property {String} message 錯誤訊息
+ */
 function static_assert_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Static_assert", tokens)];
@@ -147,17 +153,18 @@ function static_assert_declaration(context, tokens){
 		return {
 			type: "static_assert_declaration",
 			expression: exprs[2],
-			string: exprs[4]
+			message: exprs[4]
 		};
 	}
 	return null;
 }
 
-/* type_specifier: {
-	type: "type_specifier"
-	value: String of specifier name
-	specifier?: Object of specifier body, if needed
-} */
+/** type_specifier 型別識別子節點
+ * @class Parser#type_specifier
+ * @property {String} type="type_specifier" 節點種類
+ * @property {Object=} specifier 識別子內容
+ * @property {String} value 識別子標籤
+ */
 function type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("void", tokens)];
@@ -286,11 +293,11 @@ function type_specifier(context, tokens){
 	return null;
 }
 
-/* atomic_type_specifier: {
-	type: "atomic_type_specifier"
-	type_name: Object of type_name
-} */
-
+/** atomic_type_specifier 型別識別子節點
+ * @class Parser#atomic_type_specifier
+ * @property {String} type="atomic_type_specifier" 節點種類
+ * @property {Parser#type_name} type_name 型別名稱
+ */
 function atomic_type_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Atomic", tokens)];
@@ -306,11 +313,12 @@ function atomic_type_specifier(context, tokens){
 	return null;
 }
 
-/* type_name: {
-	type: "type_name"
-	specifier_qualifiers: Array of type_specifier or type_qualifier in specifier_qualifier_list
-	abstract_declarator?: Object of abstract_declarator
-} */
+/** type_name 型別名稱節點
+ * @class Parser#type_name
+ * @property {String} type="type_name" 節點種類
+ * @property {Object[]} specifier_qualifiers 型別識別子或型別限定子陣列
+ * @property {Parser#abstract_declarator=} abstract_declarator 抽象宣告子
+ */
 function type_name(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [specifier_qualifier_list(context, tokens)];
@@ -362,9 +370,11 @@ function struct_declaration_list(context, tokens){
 	return null;
 }
 
-/* specifier_qualifier_list: {
-	return Array of sprcifier or qualifiers
-} */
+/** specifier_qualifier_list 型別名稱節點
+ * @function
+ * @memberof module:Declaration
+ * @return {Array} 型別識別子或型別限定子陣列
+ */
 function specifier_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [type_specifier(context, tokens)];
