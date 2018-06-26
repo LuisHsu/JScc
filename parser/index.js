@@ -18,6 +18,7 @@ const ExtDefs = require('./extDefs');
 /** 語法解析器模組
  * @module Parser
  * @requires stream
+ * @requires ExternalDefinitions
  */
 
 /** 語法解析器串流
