@@ -1,3 +1,6 @@
 div{
     font-size: 12pt;
 }
+.main section article table td.name, .main section article table td.type, .main section article table td.attributes, .main section article table td.default{
+    max-width: 150px;
+}
