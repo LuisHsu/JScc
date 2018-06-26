@@ -1,8 +1,24 @@
+//    Copyright 2018 Luis Hsu
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
 const {getToken} = require('./utils');
 const expressions = require('./expressions');
 
 /** "宣告" 模組
- * @module Declaration
+ * @module Declarations
+ * @requires Utils
+ * @requires Expressions
  */
 module.exports = {
 	declaration: declaration,
@@ -42,17 +58,18 @@ module.exports = {
 };
 
 /** declaration "宣告" 節點
- * @class Parser#declaration
- * @property {String} type="declaration" 節點種類
- * @property {Array=} specifiers declaration_specifiers 裡的 specifier 陣列
- * @property {Array=} init_declarators init_declarator_list 裡的 init_declarator 陣列
- * @property {static_assert=} static_assert static_assert
+ * @class Declaration
+ * @memberof module:Declarations
+ * @property {string} type="declaration" 節點種類
+ * @property {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>=} specifiers 宣告識別子裡的識別子陣列
+ * @property {Array.<module:Declarations.Init_declarator>=} init_declarators 初始宣告子清單裡的初始宣告子陣列
+ * @property {module:Declarations.Static_assert_declaration=} static_assert_declaration 靜態假設宣告
  */
 /** 解析 declaration
  * @function
- * @memberof module:Declaration
- * @param {Parser#context} context Parser 的背景物件
- * @param {Token[]} tokens
+ * @memberof module:Declarations
+ * @param {module:Parser.context} context 語法解析器的背景物件
+ * @param {module:Lex.Token[]} tokens 輸入的單詞陣列
  */
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
@@ -71,16 +88,17 @@ function declaration(context, tokens){
 	if(exprs[0] != null){
 		return {
 			type: "declaration",
-			static_assert: exprs[0]
+			static_assert_declaration: exprs[0]
 		};
 	}
 	return null;
 }
 
 /** storage_class_specifier 儲存識別子節點
- * @class Parser#storage_class_specifier
- * @property {String} type="storage_class_specifier" 節點種類
- * @property {String} value 識別子
+ * @class Storage_class_specifier
+ * @memberof module:Declarations
+ * @property {string} type="storage_class_specifier" 節點種類
+ * @property {string} value 識別子
  */
 function storage_class_specifier(context, tokens){
 	var cursor = tokens.cursor;
@@ -135,10 +153,11 @@ function storage_class_specifier(context, tokens){
 }
 
 /** static_assert_declaration 靜態假設節點
- * @class Parser#static_assert_declaration
- * @property {String} type="static_assert_declaration" 節點種類
- * @property {Parser#expression} expression 運算式
- * @property {String} message 錯誤訊息
+ * @class Static_assert_declaration
+ * @memberof module:Declarations
+ * @property {string} type="static_assert_declaration" 節點種類
+ * @property {module:Expression.Expression} expression 運算式
+ * @property {string} message 錯誤訊息
  */
 function static_assert_declaration(context, tokens){
 	var cursor = tokens.cursor;
@@ -160,10 +179,11 @@ function static_assert_declaration(context, tokens){
 }
 
 /** type_specifier 型別識別子節點
- * @class Parser#type_specifier
- * @property {String} type="type_specifier" 節點種類
- * @property {Object=} specifier 識別子內容
- * @property {String} value 識別子標籤
+ * @class Type_specifier
+ * @memberof module:Declarations
+ * @property {string} type="type_specifier" 節點種類
+ * @property {(module:Declarations.Atomic_type_specifier|module:Declarations.Struct_or_union_specifier|module:Declarations.Enum_specifier|module:Declarations.Typedef_name)=} specifier 識別子內容
+ * @property {string} value 識別子標籤
  */
 function type_specifier(context, tokens){
 	var cursor = tokens.cursor;
@@ -294,9 +314,10 @@ function type_specifier(context, tokens){
 }
 
 /** atomic_type_specifier 型別識別子節點
- * @class Parser#atomic_type_specifier
- * @property {String} type="atomic_type_specifier" 節點種類
- * @property {Parser#type_name} type_name 型別名稱
+ * @class Atomic_type_specifier
+ * @memberof module:Declarations
+ * @property {string} type="atomic_type_specifier" 節點種類
+ * @property {module:Declarations.Type_name} type_name 型別名稱
  */
 function atomic_type_specifier(context, tokens){
 	var cursor = tokens.cursor;
@@ -314,10 +335,11 @@ function atomic_type_specifier(context, tokens){
 }
 
 /** type_name 型別名稱節點
- * @class Parser#type_name
- * @property {String} type="type_name" 節點種類
- * @property {Object[]} specifier_qualifiers 型別識別子或型別限定子陣列
- * @property {Parser#abstract_declarator=} abstract_declarator 抽象宣告子
+ * @class Type_name
+ * @memberof module:Declarations
+ * @property {string} type="type_name" 節點種類
+ * @property {Array.<(module:Declarations.Type_specifier|module:Declarations.Type_qualifier)>} specifier_qualifiers 型別識別子或型別限定子陣列
+ * @property {module:Declarations.Abstract_declarator=} abstract_declarator 抽象宣告子
  */
 function type_name(context, tokens){
 	var cursor = tokens.cursor;
@@ -372,8 +394,8 @@ function struct_declaration_list(context, tokens){
 
 /** specifier_qualifier_list 型別名稱節點
  * @function
- * @memberof module:Declaration
- * @return {Array} 型別識別子或型別限定子陣列
+ * @memberof module:Declarations
+ * @return {Array.<(module:Declarations.Type_specifier|module:Declarations.Type_qualifier)>} 型別識別子或型別限定子陣列
  */
 function specifier_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
@@ -533,10 +555,12 @@ function typedef_name(context, tokens){
 	return null;
 }
 
-/* type_qualifier: {
-	type: "type_qualifier"
-	value: String of qualifier name
-} */
+/** type_qualifier 型別限定子節點
+ * @class Type_qualifier
+ * @memberof module:Declarations
+ * @property {string} type="type_qualifier" 節點種類
+ * @property {string} value 型別限定子名稱
+ */
 function type_qualifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("const", tokens)];
@@ -605,10 +629,12 @@ function alignment_specifier(context, tokens){
 	}
 }
 
-/* declaration_specifiers{
-	type: "declaration_specifiers"
-	specifiers: Array of specifiers
-} */
+/** declaration_specifiers 宣告識別子名稱節點
+ * @class Declaration_specifiers
+ * @memberof module:Declarations
+ * @property {string} type="declaration_specifiers" 節點種類
+ * @property {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>} specifiers 識別子陣列
+ */
 function declaration_specifiers(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [storage_class_specifier(context, tokens)];
@@ -767,11 +793,13 @@ function designator(context, tokens){
 	return null;
 }
 
-/* declarator{
-	type: "declarator",
-	pointers? Array of pointers in pointer
-	direct_declarator: Object of direct_declarator
-} */
+/** declarator 宣告子節點
+ * @class Declarator
+ * @memberof module:Declarations
+ * @property {string} type="declarator" 節點種類
+ * @property {Array.<module:Declarations.Pointer>=} pointers 指標陣列
+ * @property {module:Declarations.Direct_declarator} direct_declarator 一般宣告子
+ */
 function declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [pointer(context, tokens)];
@@ -789,6 +817,12 @@ function declarator(context, tokens){
 	return null;
 }
 
+/** direct_declarator 一般宣告子節點
+ * @class Direct_declarator
+ * @memberof module:Declarations
+ * @property {string} type="direct_declarator" 節點種類
+ * @property {Array.<module:Declarations.Direct_declarator_tail>} tails 一般限定子後綴陣列
+ */
 /* direct_declarator{
 	type: "direct_declarator",
 	tails: Array of direct_declarator_tail
@@ -831,20 +865,19 @@ function direct_declarator(context, tokens){
 	return null;
 }
 
-/* direct_declarator_tail{
-	type: "direct_declarator_tail",
-	identifier?: Object of identifier
-	declarator?: Object of declarator
-	parameter_type_list?: Object of parameter_type_list
-	identifier_list?: Object of identifier_list
-	isStatic?: True to indicate static
-	isVariable?: True to indicate variable-length array
-	type_qualifier_list?: Object of type_qualifier_list
-	assignment_expression?: Object of assignment_expression
-}
-	direct_declarator_tail is created to eliminate left recursion
-	return an array of direct_declarator_tail
-*/
+/** direct_declarator_tail 一般限定子後綴節點，用來消除左遞迴
+ * @class Direct_declarator_tail
+ * @memberof module:Declarations
+ * @property {string} type="direct_declarator_tail" 節點種類
+ * @property {module:Lex.IdentifierToken=} identifier 名稱節點
+ * @property {module:Declarations.Declarator=} declarator 宣告子節點
+ * @property {module:Declarations.Parameter_type_list=} parameter_type_list 參數列表
+ * @property {module:Declarations.identifier_list=} identifier_list 名稱列表
+ * @property {boolean=} isStatic 是否為靜態
+ * @property {boolean=} isVariable 是否為可變長度陣列
+ * @property {module:Declarations.Type_qualifier_list} type_qualifier_list 型別限定子清單
+ * @property {module:Expression.Assignment_expression} assignment_expression 賦值運算式
+ */
 function direct_declarator_tail(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("[", tokens)];
@@ -1098,10 +1131,12 @@ function identifier_list(context, tokens){
 	return null;
 }
 
-/* type_qualifier_list{
-	type: "type_qualifier_list"
-	qualifiers: Array of type_qualifiers
-} */
+/** type_qualifier_list 型別限定子列表節點
+ * @class Type_qualifier_list
+ * @memberof module:Declarations
+ * @property {string} type="type_qualifier_list" 節點種類
+ * @property {Array.<module:Declarations.Type_qualifier>} qualifiers 型別限定子陣列
+ */
 function type_qualifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [type_qualifier(context, tokens)];
@@ -1118,10 +1153,12 @@ function type_qualifier_list(context, tokens){
 	return null;
 }
 
-/* pointer{
-	type: "pointer"
-	pointers: Array of [Array of type_qualifiers in type_qualifier_list or null]
-} */
+/** pointer 型別名稱節點
+ * @class Pointer
+ * @memberof module:Declarations
+ * @property {string} type="pointer" 節點種類
+ * @property {Array.<Array.<(module:Declarations.Type_specifier|null)>>} pointers ”型別限定子陣列或空值“的陣列
+ */
 function pointer(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("*", tokens)];
@@ -1139,11 +1176,13 @@ function pointer(context, tokens){
 	return null;
 }
 
-/* init_declarator{
-	type: "init_declarator",
-	declarator: Object of declarator,
-	initializer?: Object of initializer
-} */
+/** init_declarator 初始宣告子節點
+ * @class Init_declarator
+ * @memberof module:Declarations
+ * @property {string} type="init_declarator" 節點種類
+ * @property {module:Declarations.Declarator} declarator 宣告子節點
+ * @property {module:Declarations.Initializer=} initializer 初始者節點
+ */
 function init_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declarator(context, tokens)];
@@ -1164,10 +1203,12 @@ function init_declarator(context, tokens){
 	return null;
 }
 
-/* init_declarator_list{
-	type: "init_declarator_list",
-	init_declarators: Array of init_declarator
-} */
+/** init_declarator_list 初始宣告子清單
+ * @class Init_declarator_list
+ * @memberof module:Declarations
+ * @property {string} type="init_declarator_list" 節點種類
+ * @property {Array.<module:Declarations.Init_declarator>=} init_declarators 初始宣告子陣列
+ */
 function init_declarator_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [init_declarator(context, tokens)];

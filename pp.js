@@ -17,18 +17,22 @@ const Path = require("path");
 const log = require("./errors")(process.cwd() + Path.sep + process.argv[2]);
 const { Transform } = require('stream');
 
-/** 前處理器
- * @extends {Transform}
+/** 前處理器模組
+ * @module Preprocessor
  * @requires stream
  * @requires fs
  * @requires path
  * @requires errors
- * @property {String} dataStr 暫存接收到的資料
- * @property {MacroMap} macroMap 已定義的巨集
- * @property {bool} skipLine 是否要跳過下一行指令，運用在`#if`、`#else`、`#elif`
- * @property {bool} ifEnded `#if` 是否已經結束，運用在`#if`、`#endif`
- * @property {bool} countIf `#if` 的階層數
- * @property {String} outStr 要輸出的字串
+ */
+
+/** 前處理器
+ * @extends {Transform}
+ * @property {string} dataStr 暫存接收到的資料
+ * @property {module:Preprocessor~Preprocessor.MacroMap} macroMap 已定義的巨集
+ * @property {boolean} skipLine="false" 是否要跳過下一行指令，運用在`#if`、`#else`、`#elif`
+ * @property {boolean} ifEnded="false" `#if` 是否已經結束，運用在`#if`、`#endif`
+ * @property {boolean} countIf="0" `#if` 的階層數
+ * @property {string} outStr="" 要輸出的字串
  */
 class Preprocessor extends Transform{
 	/**
@@ -39,20 +43,22 @@ class Preprocessor extends Transform{
 		super(option);
 		this.dataStr = "";
 		/** 巨集集合，儲存所有巨集
-		 * @typedef Preprocessor#MacroMap
-		 * @property {Macro} __STDC__ 是否為標準的 C 編譯器，數值為"1"
-		 * @property {Macro} __STDC_HOSTED__ 是否為 Hosted 的 C 編譯器，數值為"0"，
-		 * @property {Macro} __STDC_VERSION__ C 語言規格的版本，數值為"201104L"
-		 * @property {Macro} __DATE__ 編譯時的日期
-		 * @property {Macro} __FILE__ 編譯時的檔案名稱
-		 * @property {Macro} __LINE__ 編譯時的行號
-		 * @property {Macro} __TIME__ 編譯時的時間
+		 * @memberof module:Preprocessor~Preprocessor
+		 * @typedef MacroMap
+		 * @property {module:Preprocessor~Preprocessor.Macro} __STDC__="false" 是否為標準的 C 編譯器，數值為"1"
+		 * @property {module:Preprocessor~Preprocessor.Macro} __STDC_HOSTED__="0" 是否為 Hosted 的 C 編譯器，數值為"0"，
+		 * @property {module:Preprocessor~Preprocessor.Macro} __STDC_VERSION__="201104L" C 語言規格的版本，數值為"201104L"
+		 * @property {module:Preprocessor~Preprocessor.Macro} __DATE__ 編譯時的日期
+		 * @property {module:Preprocessor~Preprocessor.Macro} __FILE__ 編譯時的檔案名稱
+		 * @property {module:Preprocessor~Preprocessor.Macro} __LINE__ 編譯時的行號
+		 * @property {module:Preprocessor~Preprocessor.Macro} __TIME__ 編譯時的時間
 		 */
 		/** 巨集物件
-		 * @typedef Preprocessor#Macro
-		 * @property {String} str 取代後的字串
+		 * @memberof module:Preprocessor~Preprocessor
+		 * @typedef Macro
+		 * @property {string} str 取代後的字串
 		 * @property {Array} args 函式化巨集的參數
-		 * @property {bool} va 函式化巨集是否包含可變的引數
+		 * @property {boolean} va 函式化巨集是否包含可變的引數
 		 */
 		this.macroMap = {
 			__STDC__: {str: "1", args: [], va: false},
@@ -81,7 +87,7 @@ class Preprocessor extends Transform{
 	/** 轉換串流的 _transform 函式
 	 * @private
 	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
-	 * @param  {String} encoding <b>[不使用]</b> 資料編碼
+	 * @param  {string} encoding <b>[不使用]</b> 資料編碼
 	 * @param  {function} callback 回調函式。包含一個參數 `err`，如果有錯誤引入錯誤物件，否則為`undefined`
 	 * @see [Stream]{@link https://nodejs.org/api/stream.html#stream_stream}
 	 */
@@ -103,7 +109,8 @@ class Preprocessor extends Transform{
 	/** 執行前處理
 	 * @private
 	 * @param  {Buffer} data 輸入的資料緩衝(Data Buffer)
-	 * @param  {bool} isLastChunk 表示這個資料緩衝是不是最後一個
+	 * @param  {boolean} isLastChunk 表示這個資料緩衝是不是最後一個
+	 * @return {string} 處理後剩下的字串
 	 */
 	runPP(data, isLastChunk){
 		// Replace digraph
@@ -157,7 +164,8 @@ class Preprocessor extends Transform{
 	}
 	/** 執行#defined
 	 * @private
-	 * @param  {String} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 * @param {string} line 輸入的資料字串，表示邏輯上的一行程式碼
+	 * @return {boolean} 是否成功
 	 */
 	runDefine(line){
 		var regex = /\s*#\s*define(\s+|$)/;
