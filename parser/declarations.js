@@ -358,6 +358,14 @@ function type_name(context, tokens){
 	return null;
 }
 
+/** struct_or_union_specifier 結構或列舉識別子節點
+ * @class Struct_or_union_specifier
+ * @memberof module:Declarations
+ * @property {string} type="struct_or_union_specifier" 節點種類
+ * @property {module:Lex.KeywordToken=} struct_or_union 結構或列舉
+ * @property {module:Lex.IdentifierToken=} tag 名稱標籤
+ * @property {Array.<module:Declarations.Struct_declaration=>} struct_declarations 結構宣告
+ */
 function struct_or_union_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [struct_or_union(context, tokens)];
@@ -366,28 +374,42 @@ function struct_or_union_specifier(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? struct_declaration_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
+		var ret = {
+			type: "struct_or_union_specifier",
+			struct_or_union: exprs[0],
+			struct_declarations: exprs[3]
+		};
+		if(exprs[1]){
+			ret.tag = exprs[1];
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
 	exprs = [struct_or_union(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "struct_or_union_specifier",
+			tag: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** struct_declaration_list 結構宣告清單
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Declarations.Struct_declaration>} 結構宣告陣列
+ */
 function struct_declaration_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [struct_declaration(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [struct_declaration_list(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? struct_declaration(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? struct_declaration_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		exprs[1].unshift(exprs[0]);
+		return exprs[1];
+	}else if(exprs[0] != null){
+		return [exprs[0]];
 	}
 	return null;
 }
@@ -423,64 +445,101 @@ function specifier_qualifier_list(context, tokens){
 	return null;
 }
 
+/** struct_declaration 結構宣告子
+ * @class Struct_declaration
+ * @memberof module:Declarations
+ * @property {string} type="struct_declaration" 節點種類
+ * @property {Array.<(module:Declarations.Type_specifier|module:Declarations.Type_qualifier)>=} specifier_qualifier_list 型別識別子或型別限定子陣列
+ * @property {Array.<module:Declarations.Struct_declarator>=} struct_declarator_list 結構宣告子陣列
+ * @property {module:Declarations.Static_assert_declaration=} static_assert_declaration 靜態假設宣告
+ */
 function struct_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [specifier_qualifier_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? struct_declarator_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "struct_declaration",
+			specifier_qualifier_list: exprs[0],
+			struct_declarator_list: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [static_assert_declaration(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "struct_declaration",
+			static_assert_declaration: exprs[0]
+		};
 	}
 	return null;
 }
 
+/** struct_declarator_list 結構宣告子清單
+ * @memberof module:Declarations
+ * @return {Array.<module:Declarations.Struct_declarator>}
+ */
 function struct_declarator_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [struct_declarator(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [struct_declaration_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? struct_declarator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? struct_declarator_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].unshift(exprs[0]);
+		return exprs[2];
+	}else if(exprs[0] != null){
+		return [exprs[0]];
 	}
 	return null;
 }
 
+/** struct_declarator 結構宣告子
+ * @class Struct_declarator
+ * @memberof module:Declarations
+ * @property {string} type="struct_declarator" 節點種類
+ * @property {module:Declarations.Declarator} declarator 宣告子
+ * @property {module:Expressions.Constant_expression=} constant_expression 常數運算式
+ */
 function struct_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declarator(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "struct_declarator",
+			declarator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [declarator(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(":", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	if(exprs[1] != null && exprs[2] != null){
-		// TODO:
+		var ret = {
+			type: "struct_declarator",
+			constant_expression: exprs[2]
+		};
+		ret.declarator = exprs[0];
+		return ret;
 	}
 	return null;
 }
 
+/** struct_or_union 結構或列舉關鍵字
+ * @function
+ * @memberof module:Declarations
+ * @return {module:Lex.KeywordToken} 結構或列舉關鍵字單詞
+ */
 function struct_or_union(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("struct", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("union", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	return null;
 }
