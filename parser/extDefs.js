@@ -81,7 +81,7 @@ function function_definition(context, tokens){
 
 function declaration_list(context, tokens){
 	var cursor = tokens.cursor;
-	var exprs = [declaration(context, tokens)];
+	var exprs = [decl.declaration(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? declaration_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
 		// TODO:

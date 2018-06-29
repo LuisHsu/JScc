@@ -275,6 +275,15 @@ function type_specifier(context, tokens){
 		};
 	}
 	tokens.cursor = cursor;
+	exprs = [typedef_name(context, tokens)];
+	if(exprs[0] != null){
+		return {
+			type: "type_specifier",
+			value: "typedef_name",
+			specifier: exprs[0]
+		};
+	}
+	tokens.cursor = cursor;
 	exprs = [atomic_type_specifier(context, tokens)];
 	if(exprs[0] != null){
 		return {
@@ -298,15 +307,6 @@ function type_specifier(context, tokens){
 		return {
 			type: "type_specifier",
 			value: "enum_specifier",
-			specifier: exprs[0]
-		};
-	}
-	tokens.cursor = cursor;
-	exprs = [typedef_name(context, tokens)];
-	if(exprs[0] != null){
-		return {
-			type: "type_specifier",
-			value: "typedef_name",
 			specifier: exprs[0]
 		};
 	}
@@ -370,7 +370,7 @@ function struct_or_union_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [struct_or_union(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken("{", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? struct_declaration_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
@@ -525,10 +525,10 @@ function struct_declarator(context, tokens){
 	return null;
 }
 
-/** struct_or_union 結構或列舉關鍵字
+/** struct_or_union 結構或聯集關鍵字
  * @function
  * @memberof module:Declarations
- * @return {module:Lex.KeywordToken} 結構或列舉關鍵字單詞
+ * @return {module:Lex.KeywordToken} 關鍵字單詞
  */
 function struct_or_union(context, tokens){
 	var cursor = tokens.cursor;
@@ -544,63 +544,80 @@ function struct_or_union(context, tokens){
 	return null;
 }
 
+/** enum_specifier 列舉識別子
+ * @class Enum_specifier
+ * @memberof module:Declarations
+ * @property {string} type="enum_specifier" 節點種類
+ * @property {module:Lex.IdentifierToken=} tag 標籤名稱
+ * @property {Array.<module:Declarations.Enumerator>=} enumerators 列舉子陣列
+ */
 function enum_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("enum", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken("{", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? enumerator_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [getToken("enum", tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("{", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? enumerator_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
-	if(exprs[0] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [getToken("enum", tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		var ret = {
+			type: "enum_specifier",
+			enumerators: exprs[3]
+		};
+		if(exprs[1]){
+			ret.tag = exprs[1];
+		}
+		return ret;
+	}else if(exprs[0] != null && exprs[1] != null){
+		return {
+			type: "enum_specifier",
+			tag: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** enumerator_list 列舉子清單
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Declarations.Enumerator>}
+ */
 function enumerator_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [enumerator(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [enumerator_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? enumerator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? enumerator_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].unshift(exprs[0]);
+		return exprs[2];
+	}else if(exprs[0] != null){
+		return [exprs[0]];
 	}
 	return null;
 }
 
+/** enumerator 列舉子節點
+ * @class Enumerator
+ * @memberof module:Declarations
+ * @property {string} type="enumerator" 節點種類
+ * @property {module:Lex.IdentifierToken} identifier 列舉名稱
+ * @property {module:Expressions.Constant_expression=} constant_expression 常數運算式
+ */
 function enumerator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [getToken("identifier", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("=", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "enumerator",
+			identifier: exprs[0],
+			constant_expression: exprs[2]
+		};
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return {
+			type: "enumerator",
+			identifier: exprs[0]
+		};
 	}
 	return null;
 }
@@ -608,8 +625,8 @@ function enumerator(context, tokens){
 function typedef_name(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
-	if(exprs[0] != null){
-		// TODO:
+	if(exprs[0] != null && context.typedefs[exprs[0].value]){
+		return context.typedef[exprs[0].value];
 	}
 	return null;
 }
