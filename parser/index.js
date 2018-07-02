@@ -103,7 +103,7 @@ class Parser extends Duplex {
 		 * @property {Array} typedefs 已宣告的型別
 		 */
 		var context = {
-			typedefs: []
+			typedefs: {}
 		};
 		this.tokens.cursor = 0;
 		this.genAST = ExtDefs.translation_unit(context, this.tokens);

@@ -77,11 +77,25 @@ function declaration(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? init_declarator_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-2] ? getToken(";", tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
-		return {
+		var firstSpecifier = exprs[0][0];
+		var hasTypedef = firstSpecifier.type == "storage_class_specifier" && firstSpecifier.value == "typedef";
+		var ret = {
 			type: "declaration",
-			specifiers: exprs[0].specifiers,
-			init_declarators: exprs[1] ? exprs[1].init_declarators : null
+			specifiers: exprs[0],
+			init_declarators: exprs[1] ? exprs[1] : null
 		};
+		if(hasTypedef && exprs[1]){
+			var identifierTok = null;
+			exprs[1].some((init_declarator) => {
+				return init_declarator.declarator.direct_declarator.find((direct_declarator) => {
+					if(direct_declarator.identifier){
+						identifierTok = direct_declarator.identifier;
+					}
+				});
+			});
+			context.typedefs[identifierTok.value] = ret;
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
 	exprs = [static_assert_declaration(context, tokens)];
@@ -626,7 +640,7 @@ function typedef_name(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
 	if(exprs[0] != null && context.typedefs[exprs[0].value]){
-		return context.typedef[exprs[0].value];
+		return exprs[0];
 	}
 	return null;
 }
@@ -705,11 +719,10 @@ function alignment_specifier(context, tokens){
 	}
 }
 
-/** declaration_specifiers 宣告識別子名稱節點
- * @class Declaration_specifiers
+/** declaration_specifiers
+ * @function
  * @memberof module:Declarations
- * @property {string} type="declaration_specifiers" 節點種類
- * @property {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>} specifiers 識別子陣列
+ * @return {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>} specifiers 識別子陣列
  */
 function declaration_specifiers(context, tokens){
 	var cursor = tokens.cursor;
@@ -717,13 +730,10 @@ function declaration_specifiers(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.unshift(exprs[0]);
+			exprs[1].unshift(exprs[0]);
 			return exprs[1];
 		}else{
-			return {
-				type: "declaration_specifiers",
-				specifiers: [exprs[0]]
-			};
+			return [exprs[0]];
 		}
 	}
 	tokens.cursor = cursor;
@@ -731,13 +741,10 @@ function declaration_specifiers(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.unshift(exprs[0]);
+			exprs[1].unshift(exprs[0]);
 			return exprs[1];
 		}else{
-			return {
-				type: "declaration_specifiers",
-				specifiers: [exprs[0]]
-			};
+			return [exprs[0]];
 		}
 	}
 	tokens.cursor = cursor;
@@ -745,13 +752,10 @@ function declaration_specifiers(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.unshift(exprs[0]);
+			exprs[1].unshift(exprs[0]);
 			return exprs[1];
 		}else{
-			return {
-				type: "declaration_specifiers",
-				specifiers: [exprs[0]]
-			};
+			return [exprs[0]];
 		}
 	}
 	tokens.cursor = cursor;
@@ -759,13 +763,10 @@ function declaration_specifiers(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.unshift(exprs[0]);
+			exprs[1].unshift(exprs[0]);
 			return exprs[1];
 		}else{
-			return {
-				type: "declaration_specifiers",
-				specifiers: [exprs[0]]
-			};
+			return [exprs[0]];
 		}
 	}
 	tokens.cursor = cursor;
@@ -773,13 +774,10 @@ function declaration_specifiers(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? declaration_specifiers(context, tokens) : null);
 	if(exprs[0] != null){
 		if(exprs[1]){
-			exprs[1].specifiers.unshift(exprs[0]);
+			exprs[1].unshift(exprs[0]);
 			return exprs[1];
 		}else{
-			return {
-				type: "declaration_specifiers",
-				specifiers: [exprs[0]]
-			};
+			return [exprs[0]];
 		}
 	}
 	return null;
@@ -893,30 +891,22 @@ function declarator(context, tokens){
 	return null;
 }
 
-/** direct_declarator 一般宣告子節點
- * @class Direct_declarator
+/** direct_declarator 一般宣告子 (前)
+ * @function
  * @memberof module:Declarations
- * @property {string} type="direct_declarator" 節點種類
- * @property {Array.<module:Declarations.Direct_declarator_tail>} tails 一般限定子後綴陣列
+ * @return {Array.<module:Declarations.Direct_declarator>} 一般宣告子後陣列
  */
-/* direct_declarator{
-	type: "direct_declarator",
-	tails: Array of direct_declarator_tail
-} */
 function direct_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null){
-		var ret = {
+		var ret = [{
 			type: "direct_declarator",
-			tails: [{
-				type: "direct_declarator_tail",
-				identifier: exprs[0]
-			}]
-		};
+			identifier: exprs[0]
+		}];
 		if(exprs[1] != null){
-			ret.tails = ret.tails.concat(exprs[1]);
+			ret = ret.concat(exprs[1]);
 		}
 		return ret;
 	}
@@ -926,25 +916,22 @@ function direct_declarator(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		var ret = {
+		var ret = [{
 			type: "direct_declarator",
-			tails: [{
-				type: "direct_declarator_tail",
-				declarator: exprs[1]
-			}]
-		};
+			declarator: exprs[1]
+		}];
 		if(exprs[3] != null){
-			ret.tails = ret.tails.concat(exprs[3]);
+			ret = ret.concat(exprs[3]);
 		}
 		return ret;
 	}
 	return null;
 }
 
-/** direct_declarator_tail 一般限定子後綴節點，用來消除左遞迴
- * @class Direct_declarator_tail
+/** direct_declarator_tail 一般限定子（後）
+ * @class Direct_declarator
  * @memberof module:Declarations
- * @property {string} type="direct_declarator_tail" 節點種類
+ * @property {string} type="direct_declarator" 節點種類
  * @property {module:Lex.IdentifierToken=} identifier 名稱節點
  * @property {module:Declarations.Declarator=} declarator 宣告子節點
  * @property {module:Declarations.Parameter_type_list=} parameter_type_list 參數列表
@@ -963,7 +950,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[3] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			type_qualifier_list: exprs[1],
 			assignment_expression: exprs[2]
 		};
@@ -983,7 +970,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null && exprs[4] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			type_qualifier_list: exprs[2],
 			assignment_expression: exprs[3],
 			isStatic: true
@@ -1004,7 +991,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			type_qualifier_list: exprs[1],
 			assignment_expression: exprs[3],
 			isStatic: true
@@ -1024,7 +1011,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[2] != null && exprs[3] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			type_qualifier_list: exprs[1],
 			isVariable: true
 		};
@@ -1042,7 +1029,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			parameter_type_list: exprs[1]
 		};
 		if(exprs[3] != null){
@@ -1059,7 +1046,7 @@ function direct_declarator_tail(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[2] != null){
 		var tailObj = {
-			type: "direct_declarator_tail",
+			type: "direct_declarator",
 			identifier_list: exprs[1]
 		};
 		if(exprs[3] != null){
@@ -1294,10 +1281,7 @@ function init_declarator_list(context, tokens){
 		exprs[0].init_declarators.push(exprs[2]);
 		return exprs[0];
 	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
-		return{
-			type: "init_declarator_list",
-			init_declarators: [exprs[0]]
-		};
+		return [exprs[0]];
 	}
 	return null;
 }
