@@ -72,7 +72,7 @@ function function_definition(context, tokens){
 	var exprs = [decl.declaration_specifiers(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? decl.declarator(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? declaration_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? stmt.compound_statement(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 2] ? stmt.compound_statement(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
 		// TODO:
 	}

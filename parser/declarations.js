@@ -687,16 +687,28 @@ function type_qualifier(context, tokens){
 	return null;
 }
 
+/** function_specifier 函數識別子節點
+ * @class Function_specifier
+ * @memberof module:Declarations
+ * @property {string} type="function_specifier" 節點種類
+ * @property {module:Lex.KeywordToken} specifier 函數識別子單詞
+ */
 function function_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("inline", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "function_specifier",
+			specifier: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Noreturn", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "function_specifier",
+			specifier: exprs[0]
+		};
 	}
 }
 
@@ -935,7 +947,7 @@ function direct_declarator(context, tokens){
  * @property {module:Lex.IdentifierToken=} identifier 名稱節點
  * @property {module:Declarations.Declarator=} declarator 宣告子節點
  * @property {module:Declarations.Parameter_type_list=} parameter_type_list 參數列表
- * @property {module:Declarations.identifier_list=} identifier_list 名稱列表
+ * @property {module:Declarations.Identifier_list=} identifier_list 名稱列表
  * @property {boolean=} isStatic 是否為靜態
  * @property {boolean=} isVariable 是否為可變長度陣列
  * @property {module:Declarations.Type_qualifier_list} type_qualifier_list 型別限定子清單
@@ -1059,38 +1071,59 @@ function direct_declarator_tail(context, tokens){
 	return null;
 }
 
+/** parameter_type_list 參數型別節點
+ * @class Parameter_type_list
+ * @memberof module:Declarations
+ * @property {string} type="parameter_type_list" 節點種類
+ * @property {Array.<module:Declarations.Parameter_list>} parameter_list 參數陣列
+ * @property {boolean} isVariable 是否包含可變參數
+ */
 function parameter_type_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [parameter_list(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [parameter_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("...", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "parameter_type_list",
+			parameter_list: exprs[0],
+			isVariable: true
+		};
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return {
+			type: "parameter_type_list",
+			parameter_list: exprs[0]
+		};
 	}
 	return null;
 }
 
+/** parameter_list 參數清單
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Declarations.Parameter_declaration>} 參數宣告陣列
+ */
 function parameter_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [parameter_declaration(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [parameter_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? parameter_declaration(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return [exprs[0]];
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		exprs[2].unshift(exprs[0]);
+		return exprs[2];
 	}
 	return null;
 }
 
+
+/** parameter_declaration 參數宣告
+ * @class Ｐarameter_declaration
+ * @memberof module:Declarations
+ * @property {string} type="parameter_declaration" 節點種類
+ * @property {(module:Declarations.Declarator|module:Declarations.Abstract_eclarator)} declarator 宣告子
+ */
 function parameter_declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
@@ -1178,18 +1211,37 @@ function direct_abstract_declarator(context, tokens){
 	return null;
 }
 
+/** identifier_list 型別限定子列表節點
+ * @class Identifier_list
+ * @memberof module:Declarations
+ * @property {string} type="identifier_list" 節點種類
+ * @property {Array.<module:Lex.IdentifierToken>} identifiers 名稱單詞陣列
+ * @property {boolean} isVariable 是否為可變長度清單
+ */
 function identifier_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [identifier_list(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("...", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+	if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return {
+			type: "identifier_list",
+			identifiers: [exprs[0]]
+		};
+	}else if(exprs[0] != null && exprs[1] != null){
+		if(exprs[2] != null){
+			return {
+				type: "identifier_list",
+				identifiers: [exprs[0]],
+				isVariable: true
+			};
+		}else{
+			var ilist = identifier_list(context, tokens);
+			if(ilist){
+				ilist.identifiers.unshift(exprs[0]);
+				return ilist;
+			}
+		}
 	}
 	return null;
 }
