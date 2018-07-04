@@ -49,7 +49,6 @@ module.exports = {
 	pointer: pointer,
 	direct_declarator: direct_declarator,
 	type_qualifier_list: type_qualifier_list,
-	parameter_type_list: parameter_type_list,
 	identifier_list: identifier_list,
 	parameter_list: parameter_list,
 	parameter_declaration: parameter_declaration,
@@ -946,7 +945,7 @@ function direct_declarator(context, tokens){
  * @property {string} type="direct_declarator" 節點種類
  * @property {module:Lex.IdentifierToken=} identifier 名稱節點
  * @property {module:Declarations.Declarator=} declarator 宣告子節點
- * @property {module:Declarations.Parameter_type_list=} parameter_type_list 參數列表
+ * @property {module:Declarations.Parameter_list=} parameter_list 參數列表
  * @property {module:Declarations.Identifier_list=} identifier_list 名稱列表
  * @property {boolean=} isStatic 是否為靜態
  * @property {boolean=} isVariable 是否為可變長度陣列
@@ -1036,13 +1035,13 @@ function direct_declarator_tail(context, tokens){
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
-	exprs.push(exprs[exprs.length-1] ? parameter_type_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? direct_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
 		var tailObj = {
 			type: "direct_declarator",
-			parameter_type_list: exprs[1]
+			parameter_list: exprs[1]
 		};
 		if(exprs[3] != null){
 			exprs[3].unshift(tailObj);
@@ -1071,37 +1070,12 @@ function direct_declarator_tail(context, tokens){
 	return null;
 }
 
-/** parameter_type_list 參數型別節點
- * @class Parameter_type_list
- * @memberof module:Declarations
- * @property {string} type="parameter_type_list" 節點種類
- * @property {Array.<module:Declarations.Parameter_list>} parameter_list 參數陣列
- * @property {boolean} isVariable 是否包含可變參數
- */
-function parameter_type_list(context, tokens){
-	var cursor = tokens.cursor;
-	var exprs = [parameter_list(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("...", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		return {
-			type: "parameter_type_list",
-			parameter_list: exprs[0],
-			isVariable: true
-		};
-	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
-		return {
-			type: "parameter_type_list",
-			parameter_list: exprs[0]
-		};
-	}
-	return null;
-}
-
 /** parameter_list 參數清單
- * @function
+ * @class Parameter_list
  * @memberof module:Declarations
- * @return {Array.<module:Declarations.Parameter_declaration>} 參數宣告陣列
+ * @property {string} type="parameter_list" 節點種類
+ * @property {Array.<module:Declarations.Parameter_declaration>} parameter_declarations 參數宣告陣列
+ * @property {boolean} isVariable 是否包含可變參數
  */
 function parameter_list(context, tokens){
 	var cursor = tokens.cursor;
@@ -1109,19 +1083,36 @@ function parameter_list(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? parameter_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		return [exprs[0]];
-	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
-		exprs[2].unshift(exprs[0]);
+		if(exprs[2].parameter_declarations != null){
+			exprs[2].parameter_declarations.unshift(exprs[0]);
+		}else{
+			exprs[2].parameter_declarations = [exprs[0]];
+		}
 		return exprs[2];
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return {
+			type: "parameter_list",
+			parameter_declarations: [exprs[0]]
+		};
+	}else if(exprs[0] != null && exprs[1] != null && exprs[2] == null || exprs[0] == null && exprs[1] == null && exprs[2] == null){
+		var va = getToken("...", tokens);
+		if(va != null){
+			return {
+				type: "parameter_list",
+				parameter_declarations: exprs[0] ? [exprs[0]] : null,
+				isVariable: true
+			};
+		}
 	}
 	return null;
 }
 
 
 /** parameter_declaration 參數宣告
- * @class Ｐarameter_declaration
+ * @class Parameter_declaration
  * @memberof module:Declarations
  * @property {string} type="parameter_declaration" 節點種類
+ * @property {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>} specifiers 識別子陣列
  * @property {(module:Declarations.Declarator|module:Declarations.Abstract_eclarator)} declarator 宣告子
  */
 function parameter_declaration(context, tokens){
@@ -1129,13 +1120,21 @@ function parameter_declaration(context, tokens){
 	var exprs = [declaration_specifiers(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? declarator(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "parameter_declaration",
+			specifiers: exprs[0],
+			declarator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [declaration_specifiers(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "parameter_declaration",
+			specifiers: exprs[0],
+			declarator: exprs[1]
+		};
 	}
 	return null;
 }
@@ -1203,7 +1202,7 @@ function direct_abstract_declarator(context, tokens){
 	tokens.cursor = cursor;
 	exprs = [direct_abstract_declarator(context, tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? parameter_type_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? parameter_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[1] != null && exprs[3] != null){
 		// TODO:
