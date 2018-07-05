@@ -711,6 +711,13 @@ function function_specifier(context, tokens){
 	}
 }
 
+/** alignment_specifier 宣告子節點
+ * @class Alignment_specifier
+ * @memberof module:Declarations
+ * @property {string} type="alignment_specifier" 節點種類
+ * @property {module:Declarations.Type_name=} type_name 型別名稱
+ * @property {module:Expressions.Constant_expression=} constant_expression 常數運算式
+ */
 function alignment_specifier(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Alignas", tokens)];
@@ -718,7 +725,10 @@ function alignment_specifier(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? type_name(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+		return {
+			type: "alignment_specifier",
+			type_name: exprs[2]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Alignas", tokens)];
@@ -726,7 +736,10 @@ function alignment_specifier(context, tokens){
 	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+		return {
+			type: "alignment_specifier",
+			constant_expression: exprs[2]
+		};
 	}
 }
 
