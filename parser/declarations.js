@@ -902,10 +902,10 @@ function declarator(context, tokens){
 	return null;
 }
 
-/** direct_declarator 一般宣告子 (前)
+/** direct_declarator 一般宣告子前綴
  * @function
  * @memberof module:Declarations
- * @return {Array.<module:Declarations.Direct_declarator>} 一般宣告子後陣列
+ * @return {Array.<module:Declarations.Direct_declarator>} 一般宣告子陣列
  */
 function direct_declarator(context, tokens){
 	var cursor = tokens.cursor;
@@ -939,7 +939,7 @@ function direct_declarator(context, tokens){
 	return null;
 }
 
-/** direct_declarator_tail 一般限定子（後）
+/** direct_declarator 一般宣告子類別
  * @class Direct_declarator
  * @memberof module:Declarations
  * @property {string} type="direct_declarator" 節點種類
@@ -949,8 +949,8 @@ function direct_declarator(context, tokens){
  * @property {module:Declarations.Identifier_list=} identifier_list 名稱列表
  * @property {boolean=} isStatic 是否為靜態
  * @property {boolean=} isVariable 是否為可變長度陣列
- * @property {module:Declarations.Type_qualifier_list} type_qualifier_list 型別限定子清單
- * @property {module:Expression.Assignment_expression} assignment_expression 賦值運算式
+ * @property {module:Declarations.Type_qualifier_list=} type_qualifier_list 型別限定子清單
+ * @property {module:Expression.Assignment_expression=} assignment_expression 賦值運算式
  */
 function direct_declarator_tail(context, tokens){
 	var cursor = tokens.cursor;
@@ -1107,7 +1107,6 @@ function parameter_list(context, tokens){
 	return null;
 }
 
-
 /** parameter_declaration 參數宣告
  * @class Parameter_declaration
  * @memberof module:Declarations
@@ -1139,73 +1138,147 @@ function parameter_declaration(context, tokens){
 	return null;
 }
 
+/** abstract_declarator 抽象宣告子
+ * @class Abstract_declarator
+ * @memberof module:Declarations
+ * @property {string} type="abstract_declarator" 節點種類
+ * @property {module:Declarations.Pointer} pointer 指標物件
+ * @property {module:Declarations.Direct_abstract_declarator} direct_abstract_declarator 抽象宣告子
+ */
 function abstract_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [pointer(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [pointer(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator(context, tokens) : null);
-	if(exprs[1] != null){
-		// TODO:
+	exprs.push(direct_abstract_declarator(context, tokens));
+	if(exprs[0] != null || exprs[1] != null){
+		return {
+			type: "abstract_declarator",
+			pointer: exprs[0],
+			direct_abstract_declarator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** direct_abstract_declarator 抽象宣告子前綴
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Declarations.Direct_abstract_declarator>} 一般宣告子陣列
+ */
 function direct_abstract_declarator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length-1] ? abstract_declarator(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		var ret = [{
+			type: "direct_abstract_declarator",
+			declarator: exprs[1]
+		}];
+		if(exprs[3] != null){
+			ret = ret.concat(exprs[3]);
+		}
+		return ret;
 	}
-	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	return null;
+}
+
+/** direct_abstract_declarator 一般宣告子類別
+ * @class Direct_abstract_declarator
+ * @memberof module:Declarations
+ * @property {string} type="direct_abstract_declarator" 節點種類
+ * @property {module:Declarations.Abstract_declarator=} abstract_declarator 抽象宣告子節點
+ * @property {module:Declarations.Parameter_list=} parameter_list 參數列表
+ * @property {boolean=} isStatic 是否為靜態
+ * @property {boolean=} isVariable 是否為可變長度陣列
+ * @property {module:Declarations.Type_qualifier_list=} type_qualifier_list 型別限定子清單
+ * @property {module:Expression.Assignment_expression=} assignment_expression 賦值運算式
+ */
+function direct_abstract_declarator_tail(context, tokens){
+	var cursor = tokens.cursor;
+	var exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[1] != null && exprs[4] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-3] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[3] != null){
+		var ret = [{
+			type: "direct_abstract_declarator",
+			type_qualifier_list: exprs[1],
+			assignment_expression: exprs[2]
+		}];
+		if(exprs[4] != null){
+			ret = ret.concat(exprs[4]);
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? expressions.assignment_expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[1] != null && exprs[2] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[3] != null && exprs[4] != null){
+		var ret = [{
+			type: "direct_abstract_declarator",
+			type_qualifier_list: exprs[2],
+			assignment_expression: exprs[3],
+			isStatic: true
+		}];
+		if(exprs[5] != null){
+			ret = ret.concat(exprs[5]);
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? type_qualifier_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("static", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? expressions.assignment_expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
+		var ret = [{
+			type: "direct_abstract_declarator",
+			type_qualifier_list: exprs[1],
+			assignment_expression: exprs[3],
+			isStatic: true
+		}];
+		if(exprs[5] != null){
+			ret = ret.concat(exprs[5]);
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("[", tokens) : null);
+	exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("*", tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
-	if(exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
+		var ret = [{
+			type: "direct_abstract_declarator",
+			isVariable: true
+		}];
+		if(exprs[3] != null){
+			ret = ret.concat(exprs[3]);
+		}
+		return ret;
 	}
 	tokens.cursor = cursor;
-	exprs = [direct_abstract_declarator(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken("(", tokens) : null);
+	exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length-1] ? parameter_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(")", tokens) : null);
-	if(exprs[1] != null && exprs[3] != null){
-		// TODO:
+	exprs.push(exprs[exprs.length-2] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? direct_abstract_declarator_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[2] != null){
+		var ret = [{
+			type: "direct_abstract_declarator",
+			parameter_list: exprs[1]
+		}];
+		if(exprs[3] != null){
+			ret = ret.concat(exprs[3]);
+		}
+		return ret;
 	}
 	return null;
 }
