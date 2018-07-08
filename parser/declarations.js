@@ -711,7 +711,7 @@ function function_specifier(context, tokens){
 	}
 }
 
-/** alignment_specifier 宣告子節點
+/** alignment_specifier 對齊識別子節點
  * @class Alignment_specifier
  * @memberof module:Declarations
  * @property {string} type="alignment_specifier" 節點種類
@@ -746,7 +746,7 @@ function alignment_specifier(context, tokens){
 /** declaration_specifiers
  * @function
  * @memberof module:Declarations
- * @return {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>} specifiers 識別子陣列
+ * @return {Array.<(module:Declarations.Storage_class_specifier|module:Declarations.Type_specifier|module:Declarations.Type_qualifier|module:Declarations.Function_specifier|module:Declarations.Alignment_specifier)>}
  */
 function declaration_specifiers(context, tokens){
 	var cursor = tokens.cursor;
@@ -807,86 +807,123 @@ function declaration_specifiers(context, tokens){
 	return null;
 }
 
+/** initializer 初始子節點
+ * @class Initializer
+ * @memberof module:Declarations
+ * @property {string} type="initializer" 節點種類
+ * @property {Array.<module:Declarations.Initializer_list>=} initializer_list 初始子清單節點
+ * @property {module:Expressions.Assignment_expression=} assignment_expression 賦值運算式
+ */
 function initializer(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [expressions.assignment_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return{
+			type: "initializer",
+			assignment_expression: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("{", tokens)];
 	exprs.push(exprs[exprs.length-1] ? initializer_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [getToken("{", tokens)];
-	exprs.push(exprs[exprs.length-1] ? initializer_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? getToken("}", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
-	}
-	return null;
-}
-
-function initializer_list(context, tokens){
-	var cursor = tokens.cursor;
-	var exprs = [designation(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? initializer(context, tokens) : null);
-	if(exprs[1] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [initializer_list(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? designation(context, tokens) : null);
-	exprs.push(exprs[exprs.length-1] ? initializer(context, tokens) : null);
+	exprs.push(exprs[exprs.length-2] ? getToken("}", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
-		// TODO:
+		return{
+			type: "initializer",
+			initializer_list: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** initializer_list 初始子清單節點
+ * @class initializer_list
+ * @memberof module:Declarations
+ * @property {string} type="initializer_list" 節點種類
+ * @property {module:Declarations.Initializer} initializer 初始子
+ * @property {module:Designation=} designation 架構宣告
+ */
+function initializer_list(context, tokens){
+	var exprs = [designation(context, tokens)];
+	exprs.push(initializer(context, tokens));
+	exprs.push(exprs[exprs.length-1] ? getToken(",", tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? initializer_list(context, tokens) : null);
+	if(exprs[1] != null && exprs[2] != null && exprs[3] != null){
+		exprs[3].unshift({
+			type: "initializer_list",
+			designation: exprs[0],
+			initializer: exprs[1]
+		});
+		return exprs[3];
+	}else if(exprs[1] != null && exprs[2] == null && exprs[3] == null){
+		return [{
+			type: "initializer_list",
+			designation: exprs[0],
+			initializer: exprs[1]
+		}];
+	}
+	return null;
+}
+
+/** designation 架構宣告
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Designations.Designator>} designator
+ */
 function designation(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [designator_list(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("=", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return exprs[0];
 	}
 	return null;
 }
 
+/** designator_list 架構宣告
+ * @function
+ * @memberof module:Declarations
+ * @return {Array.<module:Designations.Designator>} designator
+ */
 function designator_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [designator(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [designator_list(context, tokens)];
-	exprs.push(exprs[exprs.length-1] ? designator(context, tokens) : null);
+	exprs.push(exprs[exprs.length-1] ? designator_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		exprs[1].unshift(exprs[0]);
+		return exprs[1];
+	}else if(exprs[0] != null){
+		return [exprs[0]];
 	}
 	return null;
 }
 
+/** designator 宣告子節點
+ * @class Designator
+ * @memberof module:Declarations
+ * @property {string} type="designator" 節點種類
+ * @property {module:Expressions.Constant_expression=} constant_expression 常數運算式
+ * @property {module:Lex.IdentifierToken=} identifier 名稱
+ */
 function designator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("[", tokens)];
 	exprs.push(exprs[exprs.length-1] ? expressions.constant_expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length-1] ? getToken("]", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "designator",
+			constant_expression: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken(".", tokens)];
 	exprs.push(exprs[exprs.length-1] ? getToken("identifier", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "identifier",
+			identifier: exprs[1]
+		};
 	}
 	return null;
 }
@@ -1196,7 +1233,7 @@ function direct_abstract_declarator(context, tokens){
 	return null;
 }
 
-/** direct_abstract_declarator 一般宣告子類別
+/** direct_abstract_declarator 抽象宣告子類別
  * @class Direct_abstract_declarator
  * @memberof module:Declarations
  * @property {string} type="direct_abstract_declarator" 節點種類
