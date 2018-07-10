@@ -6,17 +6,17 @@ A C compiler for [WasmVM](https://github.com/LuisHsu/WasmVM) with Node.js
 
 ## 注意事項 Notice
 
-1. 目前只有前處理器 (pp.js) 是可以執行的
+1. 目前只有前處理器 (pp.js)，以及產生語法樹
 
-  There's only preprocessor (pp.js) workable currently.
+  There's only preprocessor (pp.js) workable currently. Compiler can only generate Syntax Tree
 
-2. **預設的 include 目前還不是 `/usr/include`，而是 `pp.js` 相同路徑下的 `include` 資料夾**
+2. **預設的 include 目前還不是 `/usr/include`，而是相同路徑下的 `include` 資料夾**
 
-**The default include directory is the `include` directory in the same path of `pp.js`, instead of `/usr/include`.**
+**The default include directory is the `include` directory under source code path, instead of `/usr/include`.**
 
-3. 在文件方面，本專案以 **台灣正體中文** 為主要使用語言，英文為次要使用語言，其他語言 （例如: 簡體中文）僅能做為參考或翻譯使用。
+3. 本專案以 **台灣正體中文** 或英文為主要使用語言，其他語言 （例如: 簡體中文）僅能做為參考或翻譯使用。
 
-  This project uses **"Taiwan Traditional Chinese"** as primary, English as secondary language in documents.
+  This project uses **"Taiwan Traditional Chinese"** and English as primary language.
   
   Other languages (Ex: Simplified Chinese) are only used as references or translations.
   
@@ -28,6 +28,14 @@ A C compiler for [WasmVM](https://github.com/LuisHsu/WasmVM) with Node.js
 
 2. 執行 Run
 
+### 前處理器 Preprocessor
+
 > node jspp.js 輸入檔名 輸出檔名
 
 > node jspp.js INPUTFILE OUTPUTFILE
+
+### 編譯器 Compiler
+
+> node jscc.js 輸入檔名 輸出檔名
+
+> node jscc.js INPUTFILE OUTPUTFILE
