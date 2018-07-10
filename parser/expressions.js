@@ -17,6 +17,8 @@ const declarations = require('./declarations');
 
 /** 運算式模組
  * @module Expressions
+ * @requires Utils
+ * @requires Declarations
  */
 module.exports = {
 	constant_expression: constant_expression,
@@ -45,47 +47,83 @@ module.exports = {
 	assignment_operator: assignment_operator
 };
 
+/** primary_expression 基本運算式節點
+ * @class Expressions
+ * @memberof module:Expressions
+ * @property {string} type="primary_expression" 節點種類
+ * @property {(module:Lex.IdentifierToken|module:Lex.FloatingToken|module:Lex.CharacterToken|module:Lex.IntegerToken|module:Lex.StringToken)=} token 單詞
+ * @property {module:Expressions.Expression=} expression 運算式
+ * @property {module:Expressions.Generic_selection=} generic_selection 通用選擇
+ */
 function primary_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("identifier", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			token: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("floating", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			token: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("character", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			token: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("integer", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			token: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("string", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			token: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
 	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			expression: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [generic_selection(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "primary_expression",
+			generic_selection: exprs[0]
+		};
 	}
 	return null;
 }
 
+/** generic_selection 通用選擇節點
+ * @class Generic_selection
+ * @memberof module:Expressions
+ * @property {string} type="generic_selection" 節點種類
+ * @property {module:Expressions.Assignment_expression=} assignment_expression 賦值運算式
+ * @property {Array.<module:Expressions.Generic_association>=} generic_associations 通用關聯陣列
+ */
 function generic_selection(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("_Generic", tokens)];
@@ -95,92 +133,87 @@ function generic_selection(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? generic_assoc_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
+		return {
+			type: "generic_selection",
+			assignment_expression: exprs[2],
+			generic_associations: exprs[4]
+		};
 	}
 	return null;
 }
 
+/** generic_assoc_list 通用選擇清單
+ * @memberof module:Expressions
+ * @return {Array.<module:Expressions.Generic_association>}
+ */
 function generic_assoc_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [generic_association(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [generic_assoc_list(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? generic_association(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? generic_assoc_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].unshift(exprs[0]);
+		return exprs[2];
+	}
+	if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return [exprs[0]];
 	}
 	return null;
 }
 
+
+/** generic_association 通用選擇節點
+ * @class Generic_association
+ * @memberof module:Expressions
+ * @property {string} type="generic_association" 節點種類
+ * @property {module:Expressions.Assignment_expression=} assignment_expression 賦值運算式
+ * @property {(module:Declarations.Type_name|module:Lex.KeywordToken)} type_name 型別名稱
+ */
 function generic_association(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declarations.type_name(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "generic_association",
+			assignment_expression: exprs[2],
+			type_name: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("default", tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "generic_association",
+			assignment_expression: exprs[2],
+			type_name: exprs[0]
+		};
 	}
 	return null;
 }
 
+/** postfix_expression 後綴運算式節點
+ * @memberof module:Expressions
+ * @return {Array.<module:Expressions.Postfix_expression>}
+ */
 function postfix_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [primary_expression(context, tokens)];
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
 	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("[", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? getToken("]", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("(", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? argument_expression_list(context, tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[3] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken(".", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("->", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("++", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [postfix_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("--", tokens) : null);
-	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		var node = {
+			type: "postfix_expression",
+			expression: exprs[0]
+		};
+		if(exprs[1] != null){
+			exprs[1].unshift(node);
+			return exprs[1];
+		}else{
+			return [node];
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
@@ -189,8 +222,19 @@ function postfix_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? getToken("{", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? declarations.initializer_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken("}", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null){
-		// TODO:
+		var node = {
+			type: "postfix_expression",
+			type_name: exprs[1],
+			initializer_list: exprs[4]
+		};
+		if(exprs[6] != null){
+			exprs[6].unshift(node);
+			return exprs[6];
+		}else{
+			return [node];
+		}
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
@@ -200,8 +244,137 @@ function postfix_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? declarations.initializer_list(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken("}", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null && exprs[5] != null && exprs[6] != null){
-		// TODO:
+		var node = {
+			type: "postfix_expression",
+			type_name: exprs[1],
+			initializer_list: exprs[4]
+		};
+		if(exprs[7] != null){
+			exprs[7].unshift(node);
+			return exprs[7];
+		}else{
+			return [node];
+		}
+	}
+	return null;
+}
+
+/** postfix_expression 通用選擇節點
+ * @class Postfix_expression
+ * @memberof module:Expressions
+ * @property {string} type="postfix_expression" 節點種類
+ * @property {(module:Expressions.Expression|module:Expressions.Primary_expression)=} expression 運算式
+ * @property {module:Declarations.Type_name=} type_name 型別名稱
+ * @property {module:Declarations.Initializer_list=} initializer_list 初始子清單
+ * @property {module:Declarations.Argument_expression_list=} argument_expression_list 參數運算式清單
+ * @property {module:Lex.IdentifierToken=} identifier 名稱單詞
+ * @property {boolean=} isArray 是否為陣列取值後綴
+ * @property {boolean=} isValueOf 是否為取值後綴
+ * @property {boolean=} isIndirect 是否為間接取值後綴
+ * @property {boolean=} isIncrement 是否為增進後綴
+ * @property {boolean=} isDecrement 是否為減退後綴
+ */
+function postfix_expression_tail(context, tokens){
+	var cursor = tokens.cursor;
+	var exprs = [getToken("[", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken("]", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
+		var node = {
+			type: "postfix_expression",
+			expression: exprs[1],
+			isArray: true
+		};
+		if(exprs[3] != null){
+			exprs[3].unshift(node);
+			return exprs[3];
+		}else{
+			return [node];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("(", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? argument_expression_list(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[2] != null){
+		var node = {
+			type: "postfix_expression",
+			argument_expression_list: exprs[1]
+		};
+		if(exprs[3] != null){
+			exprs[3].unshift(node);
+			return exprs[3];
+		}else{
+			return [node];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken(".", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null){
+		var node = {
+			type: "postfix_expression",
+			identifier: exprs[1],
+			isValueOf: true
+		};
+		if(exprs[2] != null){
+			exprs[2].unshift(node);
+			return exprs[2];
+		}else{
+			return [node];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("->", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? getToken("identifier", tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] != null){
+		var node = {
+			type: "postfix_expression",
+			identifier: exprs[1],
+			isIndirect: true
+		};
+		if(exprs[2] != null){
+			exprs[2].unshift(node);
+			return exprs[2];
+		}else{
+			return [node];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("++", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null){
+		var node = {
+			type: "postfix_expression",
+			isIncrement: true
+		};
+		if(exprs[1] != null){
+			exprs[1].unshift(node);
+			return exprs[1];
+		}else{
+			return [node];
+		}
+	}
+	tokens.cursor = cursor;
+	exprs = [getToken("--", tokens)];
+	exprs.push(exprs[exprs.length - 1] ? postfix_expression_tail(context, tokens) : null);
+	if(exprs[0] != null){
+		var node = {
+			type: "postfix_expression",
+			isDecrement: true
+		};
+		if(exprs[1] != null){
+			exprs[1].unshift(node);
+			return exprs[1];
+		}else{
+			return [node];
+		}
 	}
 	return null;
 }

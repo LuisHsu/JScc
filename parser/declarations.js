@@ -64,12 +64,6 @@ module.exports = {
  * @property {Array.<module:Declarations.Init_declarator>=} init_declarators 初始宣告子清單裡的初始宣告子陣列
  * @property {module:Declarations.Static_assert_declaration=} static_assert_declaration 靜態假設宣告
  */
-/** 解析 declaration
- * @function
- * @memberof module:Declarations
- * @param {module:Parser.context} context 語法解析器的背景物件
- * @param {module:Lex.Token[]} tokens 輸入的單詞陣列
- */
 function declaration(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [declaration_specifiers(context, tokens)];
