@@ -162,7 +162,7 @@ function generic_assoc_list(context, tokens){
 }
 
 
-/** generic_association 通用選擇節點
+/** generic_association 通用關聯節點
  * @class Generic_association
  * @memberof module:Expressions
  * @property {string} type="generic_association" 節點種類
@@ -195,7 +195,7 @@ function generic_association(context, tokens){
 	return null;
 }
 
-/** postfix_expression 後綴運算式節點
+/** postfix_expression 後綴運算式
  * @memberof module:Expressions
  * @return {Array.<module:Expressions.Postfix_expression>}
  */
@@ -261,20 +261,20 @@ function postfix_expression(context, tokens){
 	return null;
 }
 
-/** postfix_expression 通用選擇節點
+/** postfix_expression 後綴運算式節點
  * @class Postfix_expression
  * @memberof module:Expressions
  * @property {string} type="postfix_expression" 節點種類
  * @property {(module:Expressions.Expression|module:Expressions.Primary_expression)=} expression 運算式
  * @property {module:Declarations.Type_name=} type_name 型別名稱
  * @property {module:Declarations.Initializer_list=} initializer_list 初始子清單
- * @property {module:Declarations.Argument_expression_list=} argument_expression_list 參數運算式清單
+ * @property {Array.<module:Expressions.Assignment_expression>=} argument_expression_list 參數運算式清單
  * @property {module:Lex.IdentifierToken=} identifier 名稱單詞
  * @property {boolean=} isArray 是否為陣列取值後綴
  * @property {boolean=} isValueOf 是否為取值後綴
  * @property {boolean=} isIndirect 是否為間接取值後綴
- * @property {boolean=} isIncrement 是否為增進後綴
- * @property {boolean=} isDecrement 是否為減退後綴
+ * @property {boolean=} isIncrement 是否為累加後綴
+ * @property {boolean=} isDecrement 是否為累減後綴
  */
 function postfix_expression_tail(context, tokens){
 	var cursor = tokens.cursor;
@@ -379,51 +379,80 @@ function postfix_expression_tail(context, tokens){
 	return null;
 }
 
+/** argument_expression_list 參數運算式清單
+ * @memberof module:Expressions
+ * @return {Array.<module:Expressions.Assignment_expression>}
+ */
 function argument_expression_list(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [assignment_expression(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [argument_expression_list(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? argument_expression_list(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].unshift(exprs[0]);
+		return exprs[2];
+	}else if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return exprs[0];
 	}
 	return null;
 }
 
+/** unary_expression 一元運算式節點
+ * @class Unary_expression
+ * @memberof module:Expressions
+ * @property {string} type="unary_expression" 節點種類
+ * @property {(module:Expressions.Postfix_expression|module:Expressions.Cast_expression|module:Expressions.Unary_expression)=} expression 運算式
+ * @property {module:Declarations.Type_name=} type_name 型別名稱
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function unary_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [postfix_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			expression: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("++", tokens)];
 	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			expression: exprs[1],
+			operator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("--", tokens)];
 	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			expression: exprs[1],
+			operator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [unary_operator(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			expression: exprs[1],
+			operator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("sizeof", tokens)];
 	exprs.push(exprs[exprs.length - 1] ? unary_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			expression: exprs[1],
+			operator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("sizeof", tokens)];
@@ -431,7 +460,11 @@ function unary_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			type_name: exprs[2],
+			operator: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("_Alignof", tokens)];
@@ -439,7 +472,11 @@ function unary_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? declarations.type_name(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+		return {
+			type: "unary_expression",
+			type_name: exprs[2],
+			operator: exprs[0]
+		};
 	}
 	return null;
 }
@@ -448,41 +485,51 @@ function unary_operator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("&", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("*", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("+", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("-", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("~", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("!", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	return null;
 }
 
+/** cast_expression 轉型運算式節點
+ * @class Cast_expression
+ * @memberof module:Expressions
+ * @property {string} type="cast_expression" 節點種類
+ * @property {(module:Expressions.Unary_expression|module:Expressions.Cast_expression)=} expression 運算式
+ * @property {module:Declarations.Type_name=} type_name 型別名稱
+ */
 function cast_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [unary_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "cast_expression",
+			expression: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("(", tokens)];
@@ -490,262 +537,437 @@ function cast_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? getToken(")", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null){
-		// TODO:
+		return {
+			type: "cast_expression",
+			type_name: exprs[1],
+			expression: exprs[3]
+		};
 	}
 	return null;
 }
 
+/** multiplicative_expression 乘積運算式節點
+ * @class Multiplicative_expression
+ * @memberof module:Expressions
+ * @property {string} type="multiplicative_expression" 節點種類
+ * @property {module:Expressions.Cast_expression} left 左運算式
+ * @property {module:Expressions.Cast_expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function multiplicative_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [cast_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "multiplicative_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
+	exprs = [cast_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("*", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "multiplicative_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
+	exprs = [cast_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("/", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "multiplicative_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
+	exprs = [cast_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("%", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "multiplicative_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
-function multiplicative_expression(context, tokens){
-	var cursor = tokens.cursor;
-	var exprs = [cast_expression(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("*", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("/", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [multiplicative_expression(context, tokens)];
-	exprs.push(exprs[exprs.length - 1] ? getToken("%", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? cast_expression(context, tokens) : null);
-	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
-	}
-	return null;
-}
-
+/** additive_expression 加減運算式節點
+ * @class Additive_expression
+ * @memberof module:Expressions
+ * @property {string} type="additive_expression" 節點種類
+ * @property {module:Expressions.Multiplicative_expression} left 左運算式
+ * @property {module:Expressions.Multiplicative_expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function additive_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [multiplicative_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "additive_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [additive_expression(context, tokens)];
+	exprs = [multiplicative_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("+", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "additive_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [additive_expression(context, tokens)];
+	exprs = [multiplicative_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("-", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? multiplicative_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "additive_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** shift_expression 位移運算式節點
+ * @class Shift_expression
+ * @memberof module:Expressions
+ * @property {string} type="shift_expression" 節點種類
+ * @property {module:Expressions.Additive_expression} left 左運算式
+ * @property {module:Expressions.Additive_expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function shift_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [additive_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "shift_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("<<", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "shift_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(">>", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? additive_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "shift_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** relational_expression 關係運算式節點
+ * @class Relational_expression
+ * @memberof module:Expression
+ * @property {string} type="relational_expression" 節點種類
+ * @property {module:Expressions.Shift_expression} left 左運算式
+ * @property {module:Expressions.Shift_expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function relational_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [shift_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens)];
+	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("<", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens)];
+	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(">", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens)];
+	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("<=", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [relational_expression(context, tokens)];
+	exprs = [shift_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(">=", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? shift_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** equality_expression 相等運算式節點
+ * @class Equality_expression
+ * @memberof module:Expression
+ * @property {string} type="equality_expression" 節點種類
+ * @property {module:Expressions.Relational_expression} left 左運算式
+ * @property {module:Expressions.Relational_expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function equality_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [relational_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "equality_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [equality_expression(context, tokens)];
+	exprs = [relational_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("==", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? equality_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [equality_expression(context, tokens)];
+	exprs = [relational_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("!=", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? relational_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? equality_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "relational_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** and_expression 位元"AND"運算式節點
+ * @class And_expression
+ * @memberof module:Expression
+ * @property {string} type="and_expression" 節點種類
+ * @property {module:Expressions.equality_expression} left 左運算式
+ * @property {module:Expressions.equality_expression=} right 右運算式
+ */
 function AND_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [equality_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "and_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [AND_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("&", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? equality_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "and_expression",
+			left: exprs[0],
+			right: exprs[2]
+		};
 	}
 	return null;
 }
 
+/** exclusive_or_expression 位元"XOR"運算式節點
+ * @class Exclusive_or_expression
+ * @memberof module:Expression
+ * @property {string} type="exclusive_or_expression" 節點種類
+ * @property {module:Expressions.And_expression} left 左運算式
+ * @property {module:Expressions.And_expression=} right 右運算式
+ */
 function exclusive_OR_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [AND_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "exclusive_or_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [exclusive_OR_expression(context, tokens)];
+	exprs = [AND_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("^", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? AND_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? exclusive_or_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "exclusive_or_expression",
+			left: exprs[0],
+			right: exprs[2]
+		};
 	}
 	return null;
 }
 
+/** inclusive_or_expression 位元"OR"運算式節點
+ * @class Inclusive_or_expression
+ * @memberof module:Expression
+ * @property {string} type="inclusive_or_expression" 節點種類
+ * @property {module:Expressions.Exclusive_or_expression} left 左運算式
+ * @property {module:Expressions.Exclusive_or_expression=} right 右運算式
+ */
 function inclusive_OR_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [exclusive_OR_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "inclusive_or_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [inclusive_OR_expression(context, tokens)];
+	exprs = [exclusive_OR_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("|", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? exclusive_OR_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? inclusive_OR_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "inclusive_or_expression",
+			left: exprs[0],
+			right: exprs[2]
+		};
 	}
 	return null;
 }
 
+/** logical_and_expression 邏輯"AND"運算式節點
+ * @class Logical_and_expression
+ * @memberof module:Expression
+ * @property {string} type="logical_and_expression" 節點種類
+ * @property {module:Expressions.Inclusive_or_expression} left 左運算式
+ * @property {module:Expressions.Inclusive_or_expression=} right 右運算式
+ */
 function logical_AND_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [inclusive_OR_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "logical_and_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [logical_AND_expression(context, tokens)];
+	exprs = [inclusive_OR_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("&&", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? inclusive_OR_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? logical_AND_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "logical_and_expression",
+			left: exprs[0],
+			right: exprs[2]
+		};
 	}
 	return null;
 }
 
+/** logical_or_expression  邏輯"OR"運算式節點
+ * @class Logical_or_expression
+ * @memberof module:Expression
+ * @property {string} type="logical_or_expression" 節點種類
+ * @property {module:Expressions.Logical_and_expression} left 左運算式
+ * @property {module:Expressions.Logical_and_expression=} right 右運算式
+ */
 function logical_OR_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [logical_AND_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "logical_or_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
-	exprs = [logical_OR_expression(context, tokens)];
+	exprs = [logical_AND_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken("||", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? logical_AND_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? logical_OR_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "logical_or_expression",
+			left: exprs[0],
+			right: exprs[2]
+		};
 	}
 	return null;
 }
 
+/** conditional_expression 條件運算式節點
+ * @class Conditional_expression
+ * @memberof module:Expression
+ * @property {string} type="conditional_expression" 節點種類
+ * @property {module:Expressions.Logical_or_expression} condition 條件運算式
+ * @property {module:Expressions.Expression=} truthy 真運算式
+ * @property {module:Expressions.Conditional_expression=} falsy 偽運算式
+ */
 function conditional_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [logical_OR_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "conditional_expression",
+			condition: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [logical_OR_expression(context, tokens)];
@@ -754,107 +976,150 @@ function conditional_expression(context, tokens){
 	exprs.push(exprs[exprs.length - 1] ? getToken(":", tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? conditional_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null && exprs[3] != null && exprs[4] != null){
-		// TODO:
+		return {
+			type: "conditional_expression",
+			condition: exprs[0],
+			truthy: exprs[2],
+			falsy: exprs[4]
+		};
 	}
 	return null;
 }
 
+/** assignment_expression 賦值運算式節點
+ * @class Assignment_expression
+ * @memberof module:Expression
+ * @property {string} type="assignment_expression" 節點種類
+ * @property {module:Expressions.Logical_or_expression} left 左運算式
+ * @property {module:Expressions.Expression=} right 右運算式
+ * @property {module:Lex.PunctuatorToken=} operator 運算子
+ */
 function assignment_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [conditional_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "assignment_expression",
+			left: exprs[0]
+		};
 	}
 	tokens.cursor = cursor;
 	exprs = [unary_expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? assignment_operator(context, tokens) : null);
 	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		return {
+			type: "assignment_expression",
+			left: exprs[0],
+			right: exprs[2],
+			operator: exprs[1]
+		};
 	}
 	return null;
 }
 
+/** assignment_operator 賦值運算子
+ * @function
+ * @memberof module:Expression
+ * @return {module:Lex.PunctuatorToken}
+ */
 function assignment_operator(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [getToken("=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("*=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("/=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("%=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("+=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("-=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("<<=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken(">>=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("&=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("^=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	tokens.cursor = cursor;
 	exprs = [getToken("|=", tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return exprs[0];
 	}
 	return null;
 }
 
+/** constant_expression 賦值運算式節點
+ * @class Constant_expression
+ * @memberof module:Expression
+ * @property {string} type="constant_expression" 節點種類
+ * @property {module:Expressions.Conditional_expression} expression 運算式
+ */
 function constant_expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [conditional_expression(context, tokens)];
 	if(exprs[0] != null){
-		// TODO:
+		return {
+			type: "constant_expression",
+			expression: exprs[0]
+		};
 	}
 	return null;
 }
 
+/** expression 一般運算式節點
+ * @class Expression
+ * @memberof module:Expression
+ * @property {string} type="expression" 節點種類
+ * @property {Array.<module:Expressions.Assignment_expression>} expressions 運算式
+ */
 function expression(context, tokens){
 	var cursor = tokens.cursor;
 	var exprs = [assignment_expression(context, tokens)];
-	if(exprs[0] != null){
-		// TODO:
-	}
-	tokens.cursor = cursor;
-	exprs = [expression(context, tokens)];
 	exprs.push(exprs[exprs.length - 1] ? getToken(",", tokens) : null);
-	exprs.push(exprs[exprs.length - 1] ? assignment_expression(context, tokens) : null);
+	exprs.push(exprs[exprs.length - 1] ? expression(context, tokens) : null);
+	if(exprs[0] != null && exprs[1] == null && exprs[2] == null){
+		return {
+			type: "expression",
+			expressions: [exprs[0]]
+		};
+	}
 	if(exprs[0] != null && exprs[1] != null && exprs[2] != null){
-		// TODO:
+		exprs[2].expressions.unshift(exprs[0]);
+		return exprs[2];
 	}
 	return null;
 }
